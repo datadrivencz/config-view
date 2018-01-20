@@ -1,0 +1,95 @@
+import com.github.spotbugs.SpotBugsTask
+
+// waiting for junit to release the plugin to the gradle repository
+
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.3'
+  }
+}
+
+plugins {
+  id 'com.github.hierynomus.license' version '0.14.0'
+  id 'com.github.johnrengelman.shadow' version '2.0.1'
+  id 'com.github.spotbugs' version '1.6.0'
+}
+
+ext {
+  cglibVersion = '3.2.6'
+  configVersion = '1.3.2'
+  junitJupiterVersion = '5.0.3'
+}
+
+group = 'cz.datadriven.configview'
+version = '0.1-SNAPSHOT'
+
+apply plugin: 'idea'
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin: 'org.junit.platform.gradle.plugin'
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile "cglib:cglib:${cglibVersion}"
+  compile "com.typesafe:config:${configVersion}"
+  testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
+  testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+}
+
+license {
+  include '**/*.java'
+  mapping('java', 'SLASHSTAR_STYLE')
+  header = rootProject.file('HEADER')
+  strictCheck = true
+  ext.year = "${Calendar.getInstance().get(Calendar.YEAR)}"
+  ext.name = 'Datadriven.cz'
+}
+
+
+tasks.withType(SpotBugsTask) {
+  effort = 'max'
+  reportLevel = 'low'
+  reports {
+    xml.enabled = false
+    html.enabled = true
+  }
+}
+
+gradle.projectsEvaluated {
+  tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+  }
+}
+
+// build & publish sources and javadoc jar
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+
+sourceSets {
+  test.compileClasspath += configurations.compileOnly
+  test.runtimeClasspath += configurations.compileOnly
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+      artifact sourcesJar
+      artifact javadocJar
+    }
+  }
+}
