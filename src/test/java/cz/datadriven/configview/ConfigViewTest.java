@@ -15,18 +15,17 @@
  */
 package cz.datadriven.configview;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import cz.datadriven.configview.annotation.ConfigView;
-import org.junit.jupiter.api.Test;
-
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 public class ConfigViewTest {
 
@@ -70,15 +69,14 @@ public class ConfigViewTest {
     long millis();
   }
 
-  interface NonAnnotatedTestConfigView {
-
-  }
+  interface NonAnnotatedTestConfigView {}
 
   @Test
   public void test() {
-    final Config config = ConfigFactory.empty()
-        .withValue("first", ConfigValueFactory.fromAnyRef("first_value"))
-        .withValue("second", ConfigValueFactory.fromAnyRef("second_value"));
+    final Config config =
+        ConfigFactory.empty()
+            .withValue("first", ConfigValueFactory.fromAnyRef("first_value"))
+            .withValue("second", ConfigValueFactory.fromAnyRef("second_value"));
     final TestConfigView wrap = ConfigViewFactory.create(TestConfigView.class, config);
     assertEquals("first_value", wrap.first());
     assertEquals("second_value", wrap.second());
@@ -86,10 +84,11 @@ public class ConfigViewTest {
 
   @Test
   public void testClass() {
-    final Config config = ConfigFactory.empty()
-        .withValue("first", ConfigValueFactory.fromAnyRef("first_value"))
-        .withValue("second", ConfigValueFactory.fromAnyRef("second_value"))
-        .withValue("third", ConfigValueFactory.fromAnyRef("third_value"));
+    final Config config =
+        ConfigFactory.empty()
+            .withValue("first", ConfigValueFactory.fromAnyRef("first_value"))
+            .withValue("second", ConfigValueFactory.fromAnyRef("second_value"))
+            .withValue("third", ConfigValueFactory.fromAnyRef("third_value"));
     final TestConfigView2 wrap = ConfigViewFactory.create(TestConfigView2.class, config);
     assertEquals("first_value", wrap.first());
     assertEquals("second_value", wrap.second());
@@ -99,12 +98,14 @@ public class ConfigViewTest {
 
   @Test
   public void testAllAnnotationsWithPrefix() {
-    final Config config = ConfigFactory.empty()
-        .withValue("x.y.string", ConfigValueFactory.fromAnyRef("string"))
-        .withValue("x.y.string-list", ConfigValueFactory.fromAnyRef(Arrays.asList("a", "b", "c")))
-        .withValue("x.y.boolean", ConfigValueFactory.fromAnyRef(true))
-        .withValue("x.y.duration", ConfigValueFactory.fromAnyRef("10 seconds"))
-        .withValue("x.y.millis", ConfigValueFactory.fromAnyRef("5 seconds"));
+    final Config config =
+        ConfigFactory.empty()
+            .withValue("x.y.string", ConfigValueFactory.fromAnyRef("string"))
+            .withValue(
+                "x.y.string-list", ConfigValueFactory.fromAnyRef(Arrays.asList("a", "b", "c")))
+            .withValue("x.y.boolean", ConfigValueFactory.fromAnyRef(true))
+            .withValue("x.y.duration", ConfigValueFactory.fromAnyRef("10 seconds"))
+            .withValue("x.y.millis", ConfigValueFactory.fromAnyRef("5 seconds"));
     final AllAnnotationsConfigView wrap =
         ConfigViewFactory.create(AllAnnotationsConfigView.class, config, "x.y");
     assertEquals("string", wrap.string());
@@ -116,18 +117,22 @@ public class ConfigViewTest {
 
   @Test()
   public void testMissingValue() {
-    assertThrows(ConfigException.Missing.class, () -> {
-      final Config config = ConfigFactory.empty();
-      final TestConfigView wrap = ConfigViewFactory.create(TestConfigView.class, config);
-      wrap.first();
-    });
+    assertThrows(
+        ConfigException.Missing.class,
+        () -> {
+          final Config config = ConfigFactory.empty();
+          final TestConfigView wrap = ConfigViewFactory.create(TestConfigView.class, config);
+          wrap.first();
+        });
   }
 
   @Test()
   public void testWrapNonAnnotatedClass() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      final Config config = ConfigFactory.empty();
-      ConfigViewFactory.create(NonAnnotatedTestConfigView.class, config);
-    });
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          final Config config = ConfigFactory.empty();
+          ConfigViewFactory.create(NonAnnotatedTestConfigView.class, config);
+        });
   }
 }

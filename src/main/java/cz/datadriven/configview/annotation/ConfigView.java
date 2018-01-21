@@ -21,7 +21,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
@@ -33,6 +32,7 @@ public @interface ConfigView {
 
     /**
      * The name of the field.
+     *
      * @return path to the config property
      */
     java.lang.String path();
@@ -44,6 +44,7 @@ public @interface ConfigView {
 
     /**
      * The name of the field.
+     *
      * @return path to the config property
      */
     java.lang.String path();
@@ -55,6 +56,7 @@ public @interface ConfigView {
 
     /**
      * The name of the field.
+     *
      * @return path to the config property
      */
     java.lang.String path();
@@ -66,6 +68,7 @@ public @interface ConfigView {
 
     /**
      * The name of the field.
+     *
      * @return path to the config property
      */
     java.lang.String path();
@@ -77,6 +80,7 @@ public @interface ConfigView {
 
     /**
      * The name of the field.
+     *
      * @return path to the config property
      */
     java.lang.String path();
