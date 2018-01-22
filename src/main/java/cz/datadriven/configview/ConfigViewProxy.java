@@ -17,9 +17,6 @@ package cz.datadriven.configview;
 
 import com.typesafe.config.Config;
 import cz.datadriven.configview.annotation.ConfigView;
-import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -32,11 +29,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
 
 class ConfigViewProxy implements MethodInterceptor {
-  
+
   static class Factory {
-    
+
     private final Config config;
 
     Factory(Config config) {
@@ -72,8 +71,8 @@ class ConfigViewProxy implements MethodInterceptor {
   }
 
   @Override
-  public Object intercept(
-      Object obj, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+  public Object intercept(Object obj, Method method, Object[] args, MethodProxy methodProxy)
+      throws Throwable {
     final Optional<Annotation> maybeAnnotation = getInstrumentAnnotation(method);
     if (maybeAnnotation.isPresent()) {
       return getOrCreateInstrument(method.getName(), maybeAnnotation.get());
@@ -83,21 +82,26 @@ class ConfigViewProxy implements MethodInterceptor {
   }
 
   private Object getOrCreateInstrument(String key, Annotation annotation) {
-    return trackedInstruments.computeIfAbsent(key, x -> {
-      final Function<Annotation, Object> handler =
-          annotationHandlers.get(annotation.annotationType());
-      if (handler == null) {
-        throw new IllegalStateException(
-            "Handler for annotation [ " + annotation.annotationType() + " ] is not registered.");
-      }
-      return handler.apply(annotation);
-    });
+    return trackedInstruments.computeIfAbsent(
+        key,
+        x -> {
+          final Function<Annotation, Object> handler =
+              annotationHandlers.get(annotation.annotationType());
+          if (handler == null) {
+            throw new IllegalStateException(
+                "Handler for annotation [ "
+                    + annotation.annotationType()
+                    + " ] is not registered.");
+          }
+          return handler.apply(annotation);
+        });
   }
 
   private Optional<Annotation> getInstrumentAnnotation(Method method) {
-    final List<Annotation> annotations = Arrays.stream(method.getDeclaredAnnotations())
-        .filter(a -> annotationHandlers.containsKey(a.annotationType()))
-        .collect(Collectors.toList());
+    final List<Annotation> annotations =
+        Arrays.stream(method.getDeclaredAnnotations())
+            .filter(a -> annotationHandlers.containsKey(a.annotationType()))
+            .collect(Collectors.toList());
     if (annotations.size() == 0) {
       return Optional.empty();
     } else if (annotations.size() == 1) {
@@ -120,27 +124,36 @@ class ConfigViewProxy implements MethodInterceptor {
   private static Map<Class, Function<Annotation, Object>> createAnnotationHandlers(
       Factory factory) {
     final Map<Class, Function<Annotation, Object>> handlers = new HashMap<>();
-    handlers.put(ConfigView.String.class, x -> {
-      final ConfigView.String annotation = (ConfigView.String) x;
-      return factory.createString(annotation);
-    });
-    handlers.put(ConfigView.StringList.class, x -> {
-      final ConfigView.StringList annotation = (ConfigView.StringList) x;
-      return factory.createStringList(annotation);
-    });
-    handlers.put(ConfigView.Boolean.class, x -> {
-      final ConfigView.Boolean annotation = (ConfigView.Boolean) x;
-      return factory.createBoolean(annotation);
-    });
-    handlers.put(ConfigView.Duration.class, x -> {
-      final ConfigView.Duration annotation = (ConfigView.Duration) x;
-      return factory.createDuration(annotation);
-    });
-    handlers.put(ConfigView.Millis.class, x -> {
-      final ConfigView.Millis annotation = (ConfigView.Millis) x;
-      return factory.createMillis(annotation);
-    });
+    handlers.put(
+        ConfigView.String.class,
+        key -> {
+          final ConfigView.String annotation = (ConfigView.String) key;
+          return factory.createString(annotation);
+        });
+    handlers.put(
+        ConfigView.StringList.class,
+        key -> {
+          final ConfigView.StringList annotation = (ConfigView.StringList) key;
+          return factory.createStringList(annotation);
+        });
+    handlers.put(
+        ConfigView.Boolean.class,
+        key -> {
+          final ConfigView.Boolean annotation = (ConfigView.Boolean) key;
+          return factory.createBoolean(annotation);
+        });
+    handlers.put(
+        ConfigView.Duration.class,
+        key -> {
+          final ConfigView.Duration annotation = (ConfigView.Duration) key;
+          return factory.createDuration(annotation);
+        });
+    handlers.put(
+        ConfigView.Millis.class,
+        key -> {
+          final ConfigView.Millis annotation = (ConfigView.Millis) key;
+          return factory.createMillis(annotation);
+        });
     return handlers;
   }
-
 }

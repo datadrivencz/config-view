@@ -18,9 +18,7 @@ package cz.datadriven.configview;
 import com.typesafe.config.Config;
 import net.sf.cglib.proxy.Enhancer;
 
-/**
- * Factory responsible for creation of config views.
- */
+/** Factory responsible for creation of config views. */
 public class ConfigViewFactory {
 
   /**
@@ -47,13 +45,16 @@ public class ConfigViewFactory {
   @SuppressWarnings("unchecked")
   public static <T> T create(Class<T> configViewClass, Config config) {
     if (!ConfigViewProxy.canProxy(configViewClass)) {
-      throw new IllegalArgumentException("Can not instantiate metric group for " +
-          "class [ " + configViewClass + " ]. Did you forgot @ConfigView annotation?");
+      throw new IllegalArgumentException(
+          "Can not instantiate metric group for "
+              + "class [ "
+              + configViewClass
+              + " ]. Did you forgot @ConfigView annotation?");
     }
     final Enhancer enhancer = new Enhancer();
     enhancer.setCallback(new ConfigViewProxy(new ConfigViewProxy.Factory(config)));
-    if (configViewClass.isInterface()){
-      enhancer.setInterfaces(new Class[]{configViewClass});
+    if (configViewClass.isInterface()) {
+      enhancer.setInterfaces(new Class[] {configViewClass});
     } else {
       enhancer.setSuperclass(configViewClass);
     }
