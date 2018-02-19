@@ -75,7 +75,5 @@ sourceSets {
 }
 
 release {
-  git {
-    requireBranch = /^release_\d+.*$/
-  }
+  tagTemplate = 'v$version'
 }
