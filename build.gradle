@@ -16,6 +16,8 @@ plugins {
   id 'com.github.johnrengelman.shadow' version '2.0.1'
   id 'com.github.spotbugs' version '1.6.0'
   id 'com.github.sherter.google-java-format' version '0.6'
+  id 'net.researchgate.release' version '2.6.0'
+  id 'com.bmuschko.nexus' version '2.3.1' apply false
 }
 
 ext {
@@ -24,13 +26,12 @@ ext {
   junitJupiterVersion = '5.0.3'
 }
 
-group = 'cz.datadriven.configview'
-version = '0.1-SNAPSHOT'
+group = 'cz.datadriven.utils'
 
 apply plugin: 'idea'
 apply plugin: 'java'
-apply plugin: 'maven-publish'
 apply plugin: 'org.junit.platform.gradle.plugin'
+apply from: "${rootProject.projectDir}/gradle/publishing.gradle"
 
 repositories {
   mavenCentral()
@@ -68,29 +69,13 @@ gradle.projectsEvaluated {
   }
 }
 
-// build & publish sources and javadoc jar
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-  classifier = 'sources'
-  from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-  classifier = 'javadoc'
-  from javadoc.destinationDir
-}
-
 sourceSets {
   test.compileClasspath += configurations.compileOnly
   test.runtimeClasspath += configurations.compileOnly
 }
 
-publishing {
-  publications {
-    mavenJava(MavenPublication) {
-      from components.java
-      artifact sourcesJar
-      artifact javadocJar
-    }
+release {
+  git {
+    requireBranch = /^release_\d+.*$/
   }
 }

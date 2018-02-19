@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cz.datadriven.configview.annotation;
+package cz.datadriven.utils.config.view.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -64,7 +64,7 @@ public @interface ConfigView {
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.METHOD)
-  @interface Duration {
+  @interface Integer {
 
     /**
      * The name of the field.
@@ -76,7 +76,7 @@ public @interface ConfigView {
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.METHOD)
-  @interface Millis {
+  @interface Duration {
 
     /**
      * The name of the field.
