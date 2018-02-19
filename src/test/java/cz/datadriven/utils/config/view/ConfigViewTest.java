@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cz.datadriven.configview;
+package cz.datadriven.utils.config.view;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,7 +21,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
-import cz.datadriven.configview.annotation.ConfigView;
+import cz.datadriven.utils.config.view.annotation.ConfigView;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -62,11 +62,11 @@ public class ConfigViewTest {
     @ConfigView.Boolean(path = "boolean")
     boolean booleanValue();
 
+    @ConfigView.Integer(path = "integer")
+    int integer();
+
     @ConfigView.Duration(path = "duration")
     Duration duration();
-
-    @ConfigView.Millis(path = "millis")
-    long millis();
   }
 
   interface NonAnnotatedTestConfigView {}
@@ -104,15 +104,15 @@ public class ConfigViewTest {
             .withValue(
                 "x.y.string-list", ConfigValueFactory.fromAnyRef(Arrays.asList("a", "b", "c")))
             .withValue("x.y.boolean", ConfigValueFactory.fromAnyRef(true))
-            .withValue("x.y.duration", ConfigValueFactory.fromAnyRef("10 seconds"))
-            .withValue("x.y.millis", ConfigValueFactory.fromAnyRef("5 seconds"));
+            .withValue("x.y.integer", ConfigValueFactory.fromAnyRef(5))
+            .withValue("x.y.duration", ConfigValueFactory.fromAnyRef("10 seconds"));
     final AllAnnotationsConfigView wrap =
         ConfigViewFactory.create(AllAnnotationsConfigView.class, config, "x.y");
     assertEquals("string", wrap.string());
     assertEquals(Arrays.asList("a", "b", "c"), wrap.stringList());
     assertTrue(wrap.booleanValue());
+    assertEquals(5, wrap.integer());
     assertEquals(Duration.ofSeconds(10), wrap.duration());
-    assertEquals(5000L, wrap.millis());
   }
 
   @Test()

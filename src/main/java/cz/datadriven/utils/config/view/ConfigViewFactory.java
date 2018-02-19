@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cz.datadriven.configview;
+package cz.datadriven.utils.config.view;
 
 import com.typesafe.config.Config;
 import net.sf.cglib.proxy.Enhancer;

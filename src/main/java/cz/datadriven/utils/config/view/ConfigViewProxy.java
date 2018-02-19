@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cz.datadriven.configview;
+package cz.datadriven.utils.config.view;
 
 import com.typesafe.config.Config;
-import cz.datadriven.configview.annotation.ConfigView;
+import cz.datadriven.utils.config.view.annotation.ConfigView;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import net.sf.cglib.proxy.MethodInterceptor;
@@ -54,12 +53,12 @@ class ConfigViewProxy implements MethodInterceptor {
       return config.getBoolean(annotation.path());
     }
 
-    Duration createDuration(ConfigView.Duration annotation) {
-      return config.getDuration(annotation.path());
+    int createInteger(ConfigView.Integer annotation) {
+      return config.getInt(annotation.path());
     }
 
-    long createMillis(ConfigView.Millis annotation) {
-      return config.getDuration(annotation.path(), TimeUnit.MILLISECONDS);
+    Duration createDuration(ConfigView.Duration annotation) {
+      return config.getDuration(annotation.path());
     }
   }
 
@@ -143,16 +142,16 @@ class ConfigViewProxy implements MethodInterceptor {
           return factory.createBoolean(annotation);
         });
     handlers.put(
+        ConfigView.Integer.class,
+        key -> {
+          final ConfigView.Integer annotation = (ConfigView.Integer) key;
+          return factory.createInteger(annotation);
+        });
+    handlers.put(
         ConfigView.Duration.class,
         key -> {
           final ConfigView.Duration annotation = (ConfigView.Duration) key;
           return factory.createDuration(annotation);
-        });
-    handlers.put(
-        ConfigView.Millis.class,
-        key -> {
-          final ConfigView.Millis annotation = (ConfigView.Millis) key;
-          return factory.createMillis(annotation);
         });
     return handlers;
   }
