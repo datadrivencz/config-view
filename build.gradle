@@ -77,6 +77,6 @@ sourceSets {
 release {
   tagTemplate = 'v$version'
   git {
-    requireBranch = /^release_v\d+.*$/  //regex
+    requireBranch = /^release_v\d+.*$/
   }
 }
