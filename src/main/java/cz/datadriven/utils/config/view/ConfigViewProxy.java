@@ -73,6 +73,14 @@ class ConfigViewProxy implements MethodInterceptor {
     Duration createDuration(ConfigView.Duration annotation) {
       return config.getDuration(annotation.path());
     }
+
+    Map<String, Object> createMap(ConfigView.Map annotation) {
+      return config
+          .getConfig(annotation.path())
+          .entrySet()
+          .stream()
+          .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().unwrapped()));
+    }
   }
 
   private final ConcurrentHashMap<String, Object> trackedInstruments = new ConcurrentHashMap<>();
@@ -171,6 +179,12 @@ class ConfigViewProxy implements MethodInterceptor {
         key -> {
           final ConfigView.Duration annotation = (ConfigView.Duration) key;
           return factory.createDuration(annotation);
+        });
+    handlers.put(
+        ConfigView.Map.class,
+        key -> {
+          final ConfigView.Map annotation = (ConfigView.Map) key;
+          return factory.createMap(annotation);
         });
     return handlers;
   }
