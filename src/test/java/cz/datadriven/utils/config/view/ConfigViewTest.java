@@ -69,6 +69,13 @@ public class ConfigViewTest {
     Duration duration();
   }
 
+  @ConfigView
+  interface IllegalReturnType {
+
+    @ConfigView.String(path = "string")
+    Integer string();
+  }
+
   interface NonAnnotatedTestConfigView {}
 
   @Test
@@ -115,7 +122,7 @@ public class ConfigViewTest {
     assertEquals(Duration.ofSeconds(10), wrap.duration());
   }
 
-  @Test()
+  @Test
   public void testMissingValue() {
     assertThrows(
         ConfigException.Missing.class,
@@ -126,13 +133,25 @@ public class ConfigViewTest {
         });
   }
 
-  @Test()
+  @Test
   public void testWrapNonAnnotatedClass() {
     assertThrows(
         IllegalArgumentException.class,
         () -> {
           final Config config = ConfigFactory.empty();
           ConfigViewFactory.create(NonAnnotatedTestConfigView.class, config);
+        });
+  }
+
+  @Test
+  public void testInvalidReturnType() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          final Config config = ConfigFactory.empty();
+          final IllegalReturnType illegalReturnType =
+              ConfigViewFactory.create(IllegalReturnType.class, config);
+          illegalReturnType.string();
         });
   }
 }
