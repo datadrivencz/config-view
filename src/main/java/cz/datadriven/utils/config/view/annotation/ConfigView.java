@@ -89,6 +89,24 @@ public @interface ConfigView {
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.METHOD)
   @interface Configuration {
+
+    /**
+     * The name of the field.
+     *
+     * @return path to the config property
+     */
+    java.lang.String path();
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.METHOD)
+  @interface Map {
+
+    /**
+     * The name of the field.
+     *
+     * @return path to the config property
+     */
     java.lang.String path();
   }
 }

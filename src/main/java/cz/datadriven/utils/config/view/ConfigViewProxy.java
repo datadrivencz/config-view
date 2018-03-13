@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -73,15 +72,32 @@ class ConfigViewProxy implements MethodInterceptor {
     Duration createDuration(ConfigView.Duration annotation) {
       return config.getDuration(annotation.path());
     }
+
+    Map<String, Object> createMap(ConfigView.Map annotation) {
+      return config
+          .getConfig(annotation.path())
+          .entrySet()
+          .stream()
+          .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().unwrapped()));
+    }
+  }
+
+  /**
+   * Handler for a specific annotation
+   *
+   * @param <T>
+   */
+  @FunctionalInterface
+  private interface AnnotationHandler<T> {
+
+    T handle(Annotation annotation, Class<T> returnType);
   }
 
   private final ConcurrentHashMap<String, Object> trackedInstruments = new ConcurrentHashMap<>();
-  private final Map<Class, Function<Annotation, Object>> annotationHandlers;
-  private final Factory factory;
+  private final Map<Class<?>, AnnotationHandler<?>> annotationHandlers;
 
   ConfigViewProxy(Factory factory) {
-    this.factory = factory;
-    annotationHandlers = createPrimitiveTypeAnnotationHandlers(factory);
+    this.annotationHandlers = createAnnotationHandlers(factory);
   }
 
   @Override
@@ -95,24 +111,21 @@ class ConfigViewProxy implements MethodInterceptor {
     }
   }
 
-  private Object getOrCreateInstrument(String key, Class<?> returnType, Annotation annotation) {
-    return trackedInstruments.computeIfAbsent(
-        key,
-        x -> {
-          if (ConfigView.Configuration.class.equals(annotation.annotationType())) {
-            return factory.createConfig((ConfigView.Configuration) annotation, returnType);
-          }
-
-          final Function<Annotation, Object> handler =
-              annotationHandlers.get(annotation.annotationType());
-          if (handler == null) {
-            throw new IllegalStateException(
-                "Handler for annotation [ "
-                    + annotation.annotationType()
-                    + " ] is not registered.");
-          }
-          return handler.apply(annotation);
-        });
+  @SuppressWarnings("unchecked")
+  private <T> T getOrCreateInstrument(String key, Class<T> returnType, Annotation annotation) {
+    return (T)
+        trackedInstruments.computeIfAbsent(
+            key,
+            x -> {
+              final AnnotationHandler handler = annotationHandlers.get(annotation.annotationType());
+              if (handler == null) {
+                throw new IllegalStateException(
+                    "Handler for annotation [ "
+                        + annotation.annotationType()
+                        + " ] is not registered.");
+              }
+              return handler.handle(annotation, returnType);
+            });
   }
 
   private Optional<Annotation> getInstrumentAnnotation(Method method) {
@@ -139,39 +152,99 @@ class ConfigViewProxy implements MethodInterceptor {
     return false;
   }
 
-  private static Map<Class, Function<Annotation, Object>> createPrimitiveTypeAnnotationHandlers(
-      Factory factory) {
-    final Map<Class, Function<Annotation, Object>> handlers = new HashMap<>();
+  private static Map<Class<?>, AnnotationHandler<?>> createAnnotationHandlers(Factory factory) {
+    final Map<Class<?>, AnnotationHandler<?>> handlers = new HashMap<>();
     handlers.put(
         ConfigView.String.class,
-        key -> {
-          final ConfigView.String annotation = (ConfigView.String) key;
-          return factory.createString(annotation);
-        });
+        checkType(
+            String.class,
+            (key, returnType) -> {
+              final ConfigView.String annotation = (ConfigView.String) key;
+              return factory.createString(annotation);
+            }));
     handlers.put(
         ConfigView.StringList.class,
-        key -> {
-          final ConfigView.StringList annotation = (ConfigView.StringList) key;
-          return factory.createStringList(annotation);
-        });
+        checkType(
+            List.class,
+            (key, returnType) -> {
+              final ConfigView.StringList annotation = (ConfigView.StringList) key;
+              return factory.createStringList(annotation);
+            }));
     handlers.put(
         ConfigView.Boolean.class,
-        key -> {
-          final ConfigView.Boolean annotation = (ConfigView.Boolean) key;
-          return factory.createBoolean(annotation);
-        });
+        checkType(
+            Boolean.class,
+            (key, returnType) -> {
+              final ConfigView.Boolean annotation = (ConfigView.Boolean) key;
+              return factory.createBoolean(annotation);
+            }));
     handlers.put(
         ConfigView.Integer.class,
-        key -> {
-          final ConfigView.Integer annotation = (ConfigView.Integer) key;
-          return factory.createInteger(annotation);
-        });
+        checkType(
+            Integer.class,
+            (key, returnType) -> {
+              final ConfigView.Integer annotation = (ConfigView.Integer) key;
+              return factory.createInteger(annotation);
+            }));
     handlers.put(
         ConfigView.Duration.class,
-        key -> {
-          final ConfigView.Duration annotation = (ConfigView.Duration) key;
-          return factory.createDuration(annotation);
+        checkType(
+            Duration.class,
+            (key, returnType) -> {
+              final ConfigView.Duration annotation = (ConfigView.Duration) key;
+              return factory.createDuration(annotation);
+            }));
+    handlers.put(
+        ConfigView.Map.class,
+        checkType(
+            Map.class,
+            (key, returnType) -> {
+              final ConfigView.Map annotation = (ConfigView.Map) key;
+              return factory.createMap(annotation);
+            }));
+    handlers.put(
+        ConfigView.Configuration.class,
+        (key, returnType) -> {
+          final ConfigView.Configuration annotation = (ConfigView.Configuration) key;
+          return factory.createConfig(annotation, returnType);
         });
     return handlers;
+  }
+
+  private static <T> AnnotationHandler<T> checkType(
+      Class<T> expectedType, AnnotationHandler<T> handler) {
+    return (annotation, returnType) -> {
+      if (!expectedType.equals(wrapPrimitiveClass(returnType))) {
+        throw new IllegalArgumentException(
+            "Annotation ["
+                + annotation.toString()
+                + "] expects ["
+                + expectedType
+                + "] return type, but returns ["
+                + returnType
+                + "].");
+      }
+      return handler.handle(annotation, returnType);
+    };
+  }
+
+  /**
+   * Wrap supported primitive class
+   *
+   * @param clazz to wrap
+   * @return wrapped class if primitive, clazz otherwise
+   */
+  private static Class<?> wrapPrimitiveClass(Class<?> clazz) {
+    if (!clazz.isPrimitive()) {
+      return clazz;
+    }
+    switch (clazz.getName()) {
+      case "boolean":
+        return Boolean.class;
+      case "int":
+        return Integer.class;
+      default:
+        return clazz;
+    }
   }
 }
