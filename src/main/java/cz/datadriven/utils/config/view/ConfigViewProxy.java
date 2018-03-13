@@ -33,6 +33,15 @@ import net.sf.cglib.proxy.MethodProxy;
 
 class ConfigViewProxy implements MethodInterceptor {
 
+  private static final List<Class<? extends Annotation>> ANNOTATIONS =
+      Arrays.asList(
+          ConfigView.String.class,
+          ConfigView.StringList.class,
+          ConfigView.Boolean.class,
+          ConfigView.Integer.class,
+          ConfigView.Duration.class,
+          ConfigView.Configuration.class);
+
   static class Factory {
 
     private final Config config;
@@ -57,6 +66,10 @@ class ConfigViewProxy implements MethodInterceptor {
       return config.getInt(annotation.path());
     }
 
+    <T> T createConfig(ConfigView.Configuration annotation, Class<T> claz) {
+      return ConfigViewFactory.create(claz, config.getConfig(annotation.path()));
+    }
+
     Duration createDuration(ConfigView.Duration annotation) {
       return config.getDuration(annotation.path());
     }
@@ -64,9 +77,11 @@ class ConfigViewProxy implements MethodInterceptor {
 
   private final ConcurrentHashMap<String, Object> trackedInstruments = new ConcurrentHashMap<>();
   private final Map<Class, Function<Annotation, Object>> annotationHandlers;
+  private final Factory factory;
 
   ConfigViewProxy(Factory factory) {
-    annotationHandlers = createAnnotationHandlers(factory);
+    this.factory = factory;
+    annotationHandlers = createPrimitiveTypeAnnotationHandlers(factory);
   }
 
   @Override
@@ -74,16 +89,20 @@ class ConfigViewProxy implements MethodInterceptor {
       throws Throwable {
     final Optional<Annotation> maybeAnnotation = getInstrumentAnnotation(method);
     if (maybeAnnotation.isPresent()) {
-      return getOrCreateInstrument(method.getName(), maybeAnnotation.get());
+      return getOrCreateInstrument(method.getName(), method.getReturnType(), maybeAnnotation.get());
     } else {
       return methodProxy.invokeSuper(obj, args);
     }
   }
 
-  private Object getOrCreateInstrument(String key, Annotation annotation) {
+  private Object getOrCreateInstrument(String key, Class<?> returnType, Annotation annotation) {
     return trackedInstruments.computeIfAbsent(
         key,
         x -> {
+          if (ConfigView.Configuration.class.equals(annotation.annotationType())) {
+            return factory.createConfig((ConfigView.Configuration) annotation, returnType);
+          }
+
           final Function<Annotation, Object> handler =
               annotationHandlers.get(annotation.annotationType());
           if (handler == null) {
@@ -99,7 +118,7 @@ class ConfigViewProxy implements MethodInterceptor {
   private Optional<Annotation> getInstrumentAnnotation(Method method) {
     final List<Annotation> annotations =
         Arrays.stream(method.getDeclaredAnnotations())
-            .filter(a -> annotationHandlers.containsKey(a.annotationType()))
+            .filter(a -> ANNOTATIONS.contains(a.annotationType()))
             .collect(Collectors.toList());
     if (annotations.size() == 0) {
       return Optional.empty();
@@ -120,7 +139,7 @@ class ConfigViewProxy implements MethodInterceptor {
     return false;
   }
 
-  private static Map<Class, Function<Annotation, Object>> createAnnotationHandlers(
+  private static Map<Class, Function<Annotation, Object>> createPrimitiveTypeAnnotationHandlers(
       Factory factory) {
     final Map<Class, Function<Annotation, Object>> handlers = new HashMap<>();
     handlers.put(
