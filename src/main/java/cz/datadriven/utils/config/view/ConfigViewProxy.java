@@ -105,7 +105,7 @@ class ConfigViewProxy implements MethodInterceptor {
       throws Throwable {
     final Optional<Annotation> maybeAnnotation = getInstrumentAnnotation(method);
     if (maybeAnnotation.isPresent()) {
-      return getOrCreateInstrument(method.getName(), method.getetReturnType(), maybeAnnotation.get());
+      return getOrCreateInstrument(method.getName(), method.getReturnType(), maybeAnnotation.get());
     } else {
       return methodProxy.invokeSuper(obj, args);
     }
@@ -214,7 +214,7 @@ class ConfigViewProxy implements MethodInterceptor {
   private static <T> AnnotationHandler<T> checkType(
       Class<T> expectedType, AnnotationHandler<T> handler) {
     return (annotation, returnType) -> {
-      if (!expectedType.equals(returnType)) {
+      if (!expectedType.equals(wrapPrimitiveClass(returnType))) {
         throw new IllegalArgumentException(
             "Annotation ["
                 + annotation.toString()
@@ -226,5 +226,25 @@ class ConfigViewProxy implements MethodInterceptor {
       }
       return handler.handle(annotation, returnType);
     };
+  }
+
+  /**
+   * Wrap supported primitive class
+   *
+   * @param clazz to wrap
+   * @return wrapped class if primitive, clazz otherwise
+   */
+  private static Class<?> wrapPrimitiveClass(Class<?> clazz) {
+    if (!clazz.isPrimitive()) {
+      return clazz;
+    }
+    switch (clazz.getName()) {
+      case "boolean":
+        return Boolean.class;
+      case "int":
+        return Integer.class;
+      default:
+        return clazz;
+    }
   }
 }
