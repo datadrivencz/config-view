@@ -85,4 +85,10 @@ public @interface ConfigView {
      */
     java.lang.String path();
   }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.METHOD)
+  @interface Configuration {
+    java.lang.String path();
+  }
 }
