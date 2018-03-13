@@ -61,7 +61,6 @@ public class NestedConfigTest {
   public void test() {
     Config config = ConfigFactory.load("nested"); // load nested.conf from resources
     RootConfig rootConfig = ConfigViewFactory.create(RootConfig.class, config);
-    System.out.println(rootConfig.cabbage());
     assertEquals(CABBAGE_COUNT, rootConfig.cabbage());
     assertEquals(APPLE_COUNT, rootConfig.fruits().apples());
     assertEquals(ORANGES_COUNT, rootConfig.fruits().citrus().oranges());
