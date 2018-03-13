@@ -33,14 +33,14 @@ import net.sf.cglib.proxy.MethodProxy;
 
 class ConfigViewProxy implements MethodInterceptor {
 
-  private static final List<Class<? extends Annotation>> ANNOTATIONS = Arrays.asList(
+  private static final List<Class<? extends Annotation>> ANNOTATIONS =
+      Arrays.asList(
           ConfigView.String.class,
           ConfigView.StringList.class,
           ConfigView.Boolean.class,
           ConfigView.Integer.class,
           ConfigView.Duration.class,
-          ConfigView.Configuration.class
-  );
+          ConfigView.Configuration.class);
 
   static class Factory {
 
@@ -100,7 +100,7 @@ class ConfigViewProxy implements MethodInterceptor {
         key,
         x -> {
           if (ConfigView.Configuration.class.equals(annotation.annotationType())) {
-            return factory.createConfig((ConfigView.Configuration)annotation, returnType);
+            return factory.createConfig((ConfigView.Configuration) annotation, returnType);
           }
 
           final Function<Annotation, Object> handler =
@@ -138,7 +138,6 @@ class ConfigViewProxy implements MethodInterceptor {
     }
     return false;
   }
-
 
   private static Map<Class, Function<Annotation, Object>> createPrimitiveTypeAnnotationHandlers(
       Factory factory) {

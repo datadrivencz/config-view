@@ -15,12 +15,12 @@
  */
 package cz.datadriven.utils.config.view;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import cz.datadriven.utils.config.view.annotation.ConfigView;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class NestedConfigTest {
 
@@ -28,6 +28,7 @@ public class NestedConfigTest {
   interface RootConfig {
     @ConfigView.Integer(path = "cabbage")
     int cabbage();
+
     @ConfigView.Configuration(path = "fruit")
     FruitsConfig fruits();
   }
@@ -36,6 +37,7 @@ public class NestedConfigTest {
   interface FruitsConfig { // Single nested
     @ConfigView.Integer(path = "apple")
     int apples();
+
     @ConfigView.Configuration(path = "citrus")
     CitrusConfig citrus();
   }
@@ -44,6 +46,7 @@ public class NestedConfigTest {
   interface CitrusConfig { // Double-nested
     @ConfigView.Integer(path = "orange")
     int oranges();
+
     @ConfigView.Integer(path = "pomelo")
     int pomelo();
   }
