@@ -38,8 +38,10 @@ class ConfigViewProxy implements MethodInterceptor {
           ConfigView.StringList.class,
           ConfigView.Boolean.class,
           ConfigView.Integer.class,
+          ConfigView.Long.class,
           ConfigView.Duration.class,
-          ConfigView.Configuration.class);
+          ConfigView.Configuration.class,
+          ConfigView.Bytes.class);
 
   static class Factory {
 
@@ -65,6 +67,10 @@ class ConfigViewProxy implements MethodInterceptor {
       return config.getInt(annotation.path());
     }
 
+    long createLong(ConfigView.Long annotation) {
+      return config.getLong(annotation.path());
+    }
+
     <T> T createConfig(ConfigView.Configuration annotation, Class<T> claz) {
       return ConfigViewFactory.create(claz, config.getConfig(annotation.path()));
     }
@@ -79,6 +85,10 @@ class ConfigViewProxy implements MethodInterceptor {
           .entrySet()
           .stream()
           .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().unwrapped()));
+    }
+
+    long createBytes(ConfigView.Bytes annotation) {
+      return config.getBytes(annotation.path());
     }
   }
 
@@ -187,6 +197,14 @@ class ConfigViewProxy implements MethodInterceptor {
               return factory.createInteger(annotation);
             }));
     handlers.put(
+        ConfigView.Long.class,
+        checkType(
+            Long.class,
+            (key, returnType) -> {
+              final ConfigView.Long annotation = (ConfigView.Long) key;
+              return factory.createLong(annotation);
+            }));
+    handlers.put(
         ConfigView.Duration.class,
         checkType(
             Duration.class,
@@ -208,6 +226,14 @@ class ConfigViewProxy implements MethodInterceptor {
           final ConfigView.Configuration annotation = (ConfigView.Configuration) key;
           return factory.createConfig(annotation, returnType);
         });
+    handlers.put(
+        ConfigView.Bytes.class,
+        checkType(
+            Long.class,
+            (key, returnType) -> {
+              final ConfigView.Bytes annotation = (ConfigView.Bytes) key;
+              return factory.createBytes(annotation);
+            }));
     return handlers;
   }
 
@@ -243,6 +269,8 @@ class ConfigViewProxy implements MethodInterceptor {
         return Boolean.class;
       case "int":
         return Integer.class;
+      case "long":
+        return Long.class;
       default:
         return clazz;
     }
