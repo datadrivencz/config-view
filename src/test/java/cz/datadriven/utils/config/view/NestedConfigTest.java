@@ -31,6 +31,9 @@ public class NestedConfigTest {
 
     @ConfigView.Configuration(path = "fruit")
     FruitsConfig fruits();
+
+    @ConfigView.Double(path = "totalWeight")
+    double totalWeight();
   }
 
   @ConfigView
@@ -56,6 +59,7 @@ public class NestedConfigTest {
   private static final int APPLE_COUNT = 31;
   private static final int ORANGES_COUNT = 45;
   private static final int POMELO_COUNT = 63;
+  private static final double TOTAL_WEIGHT = 366.6d;
 
   @Test
   public void test() {
@@ -65,5 +69,6 @@ public class NestedConfigTest {
     assertEquals(APPLE_COUNT, rootConfig.fruits().apples());
     assertEquals(ORANGES_COUNT, rootConfig.fruits().citrus().oranges());
     assertEquals(POMELO_COUNT, rootConfig.fruits().citrus().pomelo());
+    assertEquals(TOTAL_WEIGHT, rootConfig.totalWeight());
   }
 }
