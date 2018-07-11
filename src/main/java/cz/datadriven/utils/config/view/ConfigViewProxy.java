@@ -210,13 +210,13 @@ class ConfigViewProxy implements MethodInterceptor {
               return factory.createLong(annotation);
             }));
     handlers.put(
-      ConfigView.Double.class,
-      checkType(
-        Double.class,
-        (key, returnType) -> {
-          final ConfigView.Double annotation = (ConfigView.Double) key;
-          return factory.createDouble(annotation);
-        }));
+        ConfigView.Double.class,
+        checkType(
+            Double.class,
+            (key, returnType) -> {
+              final ConfigView.Double annotation = (ConfigView.Double) key;
+              return factory.createDouble(annotation);
+            }));
     handlers.put(
         ConfigView.Duration.class,
         checkType(
