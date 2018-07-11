@@ -39,6 +39,7 @@ class ConfigViewProxy implements MethodInterceptor {
           ConfigView.Boolean.class,
           ConfigView.Integer.class,
           ConfigView.Long.class,
+          ConfigView.Double.class,
           ConfigView.Duration.class,
           ConfigView.Configuration.class,
           ConfigView.Bytes.class);
@@ -69,6 +70,10 @@ class ConfigViewProxy implements MethodInterceptor {
 
     long createLong(ConfigView.Long annotation) {
       return config.getLong(annotation.path());
+    }
+
+    double createDouble(ConfigView.Double annotation) {
+      return config.getDouble(annotation.path());
     }
 
     <T> T createConfig(ConfigView.Configuration annotation, Class<T> claz) {
@@ -205,6 +210,14 @@ class ConfigViewProxy implements MethodInterceptor {
               return factory.createLong(annotation);
             }));
     handlers.put(
+      ConfigView.Double.class,
+      checkType(
+        Double.class,
+        (key, returnType) -> {
+          final ConfigView.Double annotation = (ConfigView.Double) key;
+          return factory.createDouble(annotation);
+        }));
+    handlers.put(
         ConfigView.Duration.class,
         checkType(
             Duration.class,
@@ -271,6 +284,8 @@ class ConfigViewProxy implements MethodInterceptor {
         return Integer.class;
       case "long":
         return Long.class;
+      case "double":
+        return Double.class;
       default:
         return clazz;
     }

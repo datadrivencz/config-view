@@ -65,6 +65,9 @@ public class ConfigViewTest {
     @ConfigView.Integer(path = "integer")
     int integer();
 
+    @ConfigView.Double(path = "double")
+    double dbl();
+
     @ConfigView.Duration(path = "duration")
     Duration duration();
   }
@@ -112,6 +115,7 @@ public class ConfigViewTest {
                 "x.y.string-list", ConfigValueFactory.fromAnyRef(Arrays.asList("a", "b", "c")))
             .withValue("x.y.boolean", ConfigValueFactory.fromAnyRef(true))
             .withValue("x.y.integer", ConfigValueFactory.fromAnyRef(5))
+            .withValue("x.y.double", ConfigValueFactory.fromAnyRef(5.5d))
             .withValue("x.y.duration", ConfigValueFactory.fromAnyRef("10 seconds"));
     final AllAnnotationsConfigView wrap =
         ConfigViewFactory.create(AllAnnotationsConfigView.class, config, "x.y");
@@ -119,6 +123,7 @@ public class ConfigViewTest {
     assertEquals(Arrays.asList("a", "b", "c"), wrap.stringList());
     assertTrue(wrap.booleanValue());
     assertEquals(5, wrap.integer());
+    assertEquals(5.5d, wrap.dbl());
     assertEquals(Duration.ofSeconds(10), wrap.duration());
   }
 
