@@ -15,7 +15,9 @@
  */
 package cz.datadriven.utils.config.view;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
@@ -25,6 +27,7 @@ import cz.datadriven.utils.config.view.annotation.ConfigView;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 public class ConfigViewTest {
@@ -70,6 +73,9 @@ public class ConfigViewTest {
 
     @ConfigView.Duration(path = "duration")
     Duration duration();
+
+    @ConfigView.Map(path = "map")
+    Map<String, Object> map();
   }
 
   @ConfigView
@@ -116,7 +122,12 @@ public class ConfigViewTest {
             .withValue("x.y.boolean", ConfigValueFactory.fromAnyRef(true))
             .withValue("x.y.integer", ConfigValueFactory.fromAnyRef(5))
             .withValue("x.y.double", ConfigValueFactory.fromAnyRef(5.5d))
-            .withValue("x.y.duration", ConfigValueFactory.fromAnyRef("10 seconds"));
+            .withValue("x.y.duration", ConfigValueFactory.fromAnyRef("10 seconds"))
+            .withValue("x.y.map.boolean", ConfigValueFactory.fromAnyRef(true))
+            .withValue("x.y.map.string", ConfigValueFactory.fromAnyRef("value"))
+            .withValue("x.y.map.nested.integer", ConfigValueFactory.fromAnyRef(10))
+            .withValue("x.y.map.nested.double", ConfigValueFactory.fromAnyRef(10.5))
+            .withValue("x.y.map.nested.duration", ConfigValueFactory.fromAnyRef("20 seconds"));
     final AllAnnotationsConfigView wrap =
         ConfigViewFactory.create(AllAnnotationsConfigView.class, config, "x.y");
     assertEquals("string", wrap.string());
@@ -125,6 +136,11 @@ public class ConfigViewTest {
     assertEquals(5, wrap.integer());
     assertEquals(5.5d, wrap.dbl());
     assertEquals(Duration.ofSeconds(10), wrap.duration());
+    assertTrue((boolean) wrap.map().get("boolean"));
+    assertEquals("value", wrap.map().get("string"));
+    assertEquals(10, wrap.map().get("nested.integer"));
+    assertEquals(10.5, wrap.map().get("nested.double"));
+    assertEquals("20 seconds", wrap.map().get("nested.duration"));
   }
 
   @Test

@@ -42,7 +42,8 @@ class ConfigViewProxy implements MethodInterceptor {
           ConfigView.Double.class,
           ConfigView.Duration.class,
           ConfigView.Configuration.class,
-          ConfigView.Bytes.class);
+          ConfigView.Bytes.class,
+          ConfigView.Map.class);
 
   static class Factory {
 
