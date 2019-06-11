@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Datadriven.cz
+ * Copyright 2019 Datadriven.cz
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,8 @@ class ConfigViewProxy implements MethodInterceptor {
           ConfigView.Double.class,
           ConfigView.Duration.class,
           ConfigView.Configuration.class,
-          ConfigView.Bytes.class);
+          ConfigView.Bytes.class,
+          ConfigView.Map.class);
 
   static class Factory {
 
