@@ -16,6 +16,8 @@
 package cz.datadriven.utils.config.view;
 
 import com.typesafe.config.Config;
+import java.util.ArrayList;
+import java.util.Collections;
 import net.sf.cglib.proxy.Enhancer;
 
 /** Factory responsible for creation of config views. */
@@ -27,11 +29,14 @@ public class ConfigViewFactory {
    * @param configViewClass class to materialize view into
    * @param config config to create view from
    * @param basePath base path to extract from the config
+   * @param fallbackConfigs configs which can be used for resolving {@code fallback} paths from
+   *     annotations
    * @param <T> type of the view class to be created
    * @return the view
    */
-  public static <T> T create(Class<T> configViewClass, Config config, String basePath) {
-    return create(configViewClass, config.getConfig(basePath));
+  public static <T> T create(
+      Class<T> configViewClass, Config config, String basePath, Config... fallbackConfigs) {
+    return create(configViewClass, config.getConfig(basePath), fallbackConfigs);
   }
 
   /**
@@ -39,11 +44,13 @@ public class ConfigViewFactory {
    *
    * @param configViewClass class to materialize view into
    * @param config config to create view from
+   * @param fallbackConfigs configs which can be used for resolving {@code fallback} paths from
+   *     annotations
    * @param <T> type of the view class to be created
    * @return the view
    */
   @SuppressWarnings("unchecked")
-  public static <T> T create(Class<T> configViewClass, Config config) {
+  public static <T> T create(Class<T> configViewClass, Config config, Config... fallbackConfigs) {
     if (!ConfigViewProxy.canProxy(configViewClass)) {
       throw new IllegalArgumentException(
           "Can not instantiate metric group for "
@@ -52,7 +59,10 @@ public class ConfigViewFactory {
               + " ]. Did you forgot @ConfigView annotation?");
     }
     final Enhancer enhancer = new Enhancer();
-    enhancer.setCallback(new ConfigViewProxy(new ConfigViewProxy.Factory(config)));
+    ArrayList<Config> fallbackList = new ArrayList<>();
+    Collections.addAll(fallbackList, fallbackConfigs);
+
+    enhancer.setCallback(new ConfigViewProxy(new ConfigViewProxy.Factory(config, fallbackList)));
     if (configViewClass.isInterface()) {
       enhancer.setInterfaces(new Class[] {configViewClass});
     } else {

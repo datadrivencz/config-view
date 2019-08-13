@@ -16,21 +16,41 @@
 package cz.datadriven.utils.config.view;
 
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigFactory;
 import cz.datadriven.utils.config.view.annotation.ConfigView;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
 class ConfigViewProxy implements MethodInterceptor {
+
+  public static class FallbackConfigMissingException extends ConfigException {
+
+    private final List<ConfigException> configExceptions;
+
+    private FallbackConfigMissingException(String message, List<ConfigException> configExceptions) {
+      super(message);
+      this.configExceptions = Collections.unmodifiableList(configExceptions);
+    }
+
+    public List<ConfigException> getConfigExceptions() {
+      return configExceptions;
+    }
+  }
 
   private static final List<Class<? extends Annotation>> ANNOTATIONS =
       Arrays.asList(
@@ -49,52 +69,140 @@ class ConfigViewProxy implements MethodInterceptor {
 
     private final Config config;
 
-    Factory(Config config) {
+    private final List<Config> fallbackConfigs;
+
+    Factory(Config config, List<Config> fallbackConfigs) {
       this.config = config;
+      this.fallbackConfigs = fallbackConfigs;
     }
 
     String createString(ConfigView.String annotation) {
-      return config.getString(annotation.path());
+      return getWithFallback(Config::getString, annotation.path(), annotation.fallbackPath());
     }
 
     List<String> createStringList(ConfigView.StringList annotation) {
-      return config.getStringList(annotation.path());
+      return getWithFallback(Config::getStringList, annotation.path(), annotation.fallbackPath());
     }
 
     boolean createBoolean(ConfigView.Boolean annotation) {
-      return config.getBoolean(annotation.path());
+      return getWithFallback(Config::getBoolean, annotation.path(), annotation.fallbackPath());
     }
 
     int createInteger(ConfigView.Integer annotation) {
-      return config.getInt(annotation.path());
+      return getWithFallback(Config::getInt, annotation.path(), annotation.fallbackPath());
     }
 
     long createLong(ConfigView.Long annotation) {
-      return config.getLong(annotation.path());
+      return getWithFallback(Config::getLong, annotation.path(), annotation.fallbackPath());
     }
 
     double createDouble(ConfigView.Double annotation) {
-      return config.getDouble(annotation.path());
+      return getWithFallback(Config::getDouble, annotation.path(), annotation.fallbackPath());
     }
 
     <T> T createConfig(ConfigView.Configuration annotation, Class<T> claz) {
-      return ConfigViewFactory.create(claz, config.getConfig(annotation.path()));
+      Config[] fallbackConfigsArray = this.fallbackConfigs.toArray(new Config[] {});
+      String fallbackPath = annotation.fallbackPath();
+      String path = annotation.path();
+
+      // Collect fallback config
+      Config mergedFallbackConfig = getFallbackConfig(fallbackPath);
+
+      // Create subconfig from fallback if the config has not given path and fallback config is not
+      // empty
+      if (!config.hasPath(path) && !mergedFallbackConfig.isEmpty()) {
+        return ConfigViewFactory.create(claz, mergedFallbackConfig, fallbackConfigsArray);
+      }
+
+      // otherwise try to fallback config
+      return ConfigViewFactory.create(
+          claz, config.getConfig(path).withFallback(mergedFallbackConfig), fallbackConfigsArray);
     }
 
     Duration createDuration(ConfigView.Duration annotation) {
-      return config.getDuration(annotation.path());
+      return getWithFallback(Config::getDuration, annotation.path(), annotation.fallbackPath());
     }
 
     Map<String, Object> createMap(ConfigView.Map annotation) {
-      return config
-          .getConfig(annotation.path())
+      String path = annotation.path();
+      Config fallbackConfig = getFallbackConfig(annotation.fallbackPath());
+      Config mapConfig;
+
+      if (!config.hasPath(path) && !fallbackConfig.isEmpty()) {
+        //compose the map from fallback configs if default does not have given path but fallback is not empty
+        mapConfig = fallbackConfig;
+      } else {
+        // otherwise try to compose config from path and its fallbacks
+        mapConfig = config.getConfig(path).withFallback(fallbackConfig);
+      }
+
+      return mapConfig
           .entrySet()
           .stream()
           .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().unwrapped()));
     }
 
     long createBytes(ConfigView.Bytes annotation) {
-      return config.getBytes(annotation.path());
+      return getWithFallback(Config::getBytes, annotation.path(), annotation.fallbackPath());
+    }
+
+    private Config getFallbackConfig(String fallbackPath) {
+      Config mergedFallbackConfig = ConfigFactory.empty();
+      if (!ConfigView.DEFAULT_FALLBACK_PATH.equals(fallbackPath) && !fallbackConfigs.isEmpty()) {
+        for (Config fallbackConfig : fallbackConfigs) {
+          if (fallbackConfig.hasPath(fallbackPath)) {
+            mergedFallbackConfig =
+                mergedFallbackConfig.withFallback(fallbackConfig.getConfig(fallbackPath));
+          }
+        }
+      }
+      return mergedFallbackConfig;
+    }
+
+    private <T> T getWithFallback(
+        BiFunction<Config, String, T> getFn, String mainPath, String fallbackPath) {
+      ConfigException catchedException;
+
+      try {
+        return getFn.apply(config, mainPath);
+      } catch (ConfigException e) {
+        catchedException = e;
+      }
+
+      // produce default exception if there is not any fallback
+      if (fallbackConfigs.isEmpty() || ConfigView.DEFAULT_FALLBACK_PATH.equals(fallbackPath)) {
+        throw catchedException;
+      }
+
+      // collect all exceptions for later producing in group exception.
+      ArrayList<ConfigException> configExceptions = new ArrayList<>();
+      configExceptions.add(catchedException);
+
+      // find fallback value
+      Optional<T> maybeFallbackValue =
+          fallbackConfigs
+              .stream()
+              .map(
+                  fallbackConfig -> {
+                    try {
+                      return getFn.apply(fallbackConfig, fallbackPath);
+                    } catch (ConfigException e) {
+                      configExceptions.add(e);
+                      return null;
+                    }
+                  })
+              .filter(Objects::nonNull)
+              .findFirst();
+
+      // or throw exception
+      return maybeFallbackValue.orElseThrow(
+          () ->
+              new FallbackConfigMissingException(
+                  String.format(
+                      "Value for path [%s] was not found neither in configuration "
+                          + "nor in any fallback configurations under [%s] path",
+                      mainPath, fallbackPath),
+                  configExceptions));
     }
   }
 

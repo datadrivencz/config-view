@@ -15,6 +15,7 @@
  */
 package cz.datadriven.utils.config.view.annotation;
 
+import com.typesafe.config.Config;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
@@ -26,6 +27,8 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 public @interface ConfigView {
 
+  java.lang.String DEFAULT_FALLBACK_PATH = "";
+
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.METHOD)
   @interface String {
@@ -36,6 +39,8 @@ public @interface ConfigView {
      * @return path to the config property
      */
     java.lang.String path();
+
+    java.lang.String fallbackPath() default DEFAULT_FALLBACK_PATH;
   }
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -48,6 +53,15 @@ public @interface ConfigView {
      * @return path to the config property
      */
     java.lang.String path();
+
+    /**
+     * Path to fallback value in optional fallback configuration.
+     *
+     * @see cz.datadriven.utils.config.view.ConfigViewFactory#create(Class, Config, Config...)
+     *     Declaration of fallback configs.
+     * @return path to fallback value of fallback configuration.
+     */
+    java.lang.String fallbackPath() default DEFAULT_FALLBACK_PATH;
   }
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -60,6 +74,15 @@ public @interface ConfigView {
      * @return path to the config property
      */
     java.lang.String path();
+
+    /**
+     * Path to fallback value in optional fallback configuration.
+     *
+     * @see cz.datadriven.utils.config.view.ConfigViewFactory#create(Class, Config, Config...)
+     *     Declaration of fallback configs.
+     * @return path to fallback value of fallback configuration.
+     */
+    java.lang.String fallbackPath() default DEFAULT_FALLBACK_PATH;
   }
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -72,6 +95,15 @@ public @interface ConfigView {
      * @return path to the config property
      */
     java.lang.String path();
+
+    /**
+     * Path to fallback value in optional fallback configuration.
+     *
+     * @see cz.datadriven.utils.config.view.ConfigViewFactory#create(Class, Config, Config...)
+     *     Declaration of fallback configs.
+     * @return path to fallback value of fallback configuration.
+     */
+    java.lang.String fallbackPath() default DEFAULT_FALLBACK_PATH;
   }
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -84,6 +116,15 @@ public @interface ConfigView {
      * @return path to the config property
      */
     java.lang.String path();
+
+    /**
+     * Path to fallback value in optional fallback configuration.
+     *
+     * @see cz.datadriven.utils.config.view.ConfigViewFactory#create(Class, Config, Config...)
+     *     Declaration of fallback configs.
+     * @return path to fallback value of fallback configuration.
+     */
+    java.lang.String fallbackPath() default DEFAULT_FALLBACK_PATH;
   }
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -96,6 +137,15 @@ public @interface ConfigView {
      * @return path to the config property
      */
     java.lang.String path();
+
+    /**
+     * Path to fallback value in optional fallback configuration.
+     *
+     * @see cz.datadriven.utils.config.view.ConfigViewFactory#create(Class, Config, Config...)
+     *     Declaration of fallback configs.
+     * @return path to fallback value of fallback configuration.
+     */
+    java.lang.String fallbackPath() default DEFAULT_FALLBACK_PATH;
   }
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -108,6 +158,15 @@ public @interface ConfigView {
      * @return path to the config property
      */
     java.lang.String path();
+
+    /**
+     * Path to fallback value in optional fallback configuration.
+     *
+     * @see cz.datadriven.utils.config.view.ConfigViewFactory#create(Class, Config, Config...)
+     *     Declaration of fallback configs.
+     * @return path to fallback value of fallback configuration.
+     */
+    java.lang.String fallbackPath() default DEFAULT_FALLBACK_PATH;
   }
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -120,6 +179,15 @@ public @interface ConfigView {
      * @return path to the config property
      */
     java.lang.String path();
+
+    /**
+     * Path to fallback value in optional fallback configuration.
+     *
+     * @see cz.datadriven.utils.config.view.ConfigViewFactory#create(Class, Config, Config...)
+     *     Declaration of fallback configs.
+     * @return path to fallback value of fallback configuration.
+     */
+    java.lang.String fallbackPath() default DEFAULT_FALLBACK_PATH;
   }
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -132,6 +200,15 @@ public @interface ConfigView {
      * @return path to the config property
      */
     java.lang.String path();
+
+    /**
+     * Path to fallback value in optional fallback configuration.
+     *
+     * @see cz.datadriven.utils.config.view.ConfigViewFactory#create(Class, Config, Config...)
+     *     Declaration of fallback configs.
+     * @return path to fallback value of fallback configuration.
+     */
+    java.lang.String fallbackPath() default DEFAULT_FALLBACK_PATH;
   }
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -144,5 +221,14 @@ public @interface ConfigView {
      * @return path to the config property
      */
     java.lang.String path();
+
+    /**
+     * Path to fallback value in optional fallback configuration.
+     *
+     * @see cz.datadriven.utils.config.view.ConfigViewFactory#create(Class, Config, Config...)
+     *     Declaration of fallback configs.
+     * @return path to fallback value of fallback configuration.
+     */
+    java.lang.String fallbackPath() default DEFAULT_FALLBACK_PATH;
   }
 }
