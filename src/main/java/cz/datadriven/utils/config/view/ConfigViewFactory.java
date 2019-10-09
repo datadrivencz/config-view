@@ -46,10 +46,10 @@ public class ConfigViewFactory {
   public static <T> T create(Class<T> configViewClass, Config config) {
     if (!ConfigViewProxy.canProxy(configViewClass)) {
       throw new IllegalArgumentException(
-          "Can not instantiate metric group for "
+          "Can not instantiate ConfigView for "
               + "class [ "
               + configViewClass
-              + " ]. Did you forgot @ConfigView annotation?");
+              + " ]. Did you forget @ConfigView annotation?");
     }
     final Enhancer enhancer = new Enhancer();
     enhancer.setCallback(new ConfigViewProxy(new ConfigViewProxy.Factory(config)));

@@ -110,9 +110,23 @@ public @interface ConfigView {
     java.lang.String path();
   }
 
+  /** Handle for obtaining an instance of ConfigView annotated class. */
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.METHOD)
   @interface Configuration {
+
+    /**
+     * The name of the field.
+     *
+     * @return path to the config property
+     */
+    java.lang.String path();
+  }
+
+  /** Handle for obtaining an instance of typesafe Config class. */
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.METHOD)
+  @interface TypesafeConfig {
 
     /**
      * The name of the field.
