@@ -15,7 +15,7 @@ plugins {
   id 'com.github.hierynomus.license' version '0.14.0'
   id 'com.github.johnrengelman.shadow' version '2.0.1'
   id 'com.github.spotbugs' version '1.6.0'
-  id 'com.github.sherter.google-java-format' version '0.6'
+  id "com.diffplug.gradle.spotless" version "3.25.0"
   id 'net.researchgate.release' version '2.6.0'
   id 'com.bmuschko.nexus' version '2.3.1' apply false
 }
@@ -43,6 +43,12 @@ dependencies {
   compile "com.typesafe:config:${configVersion}"
   testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
   testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+}
+
+spotless {
+  java {
+    googleJavaFormat("1.7")
+  }
 }
 
 license {

@@ -42,6 +42,7 @@ class ConfigViewProxy implements MethodInterceptor {
           ConfigView.Double.class,
           ConfigView.Duration.class,
           ConfigView.Configuration.class,
+          ConfigView.TypesafeConfig.class,
           ConfigView.Bytes.class,
           ConfigView.Map.class);
 
@@ -81,15 +82,16 @@ class ConfigViewProxy implements MethodInterceptor {
       return ConfigViewFactory.create(claz, config.getConfig(annotation.path()));
     }
 
+    Config createTypeSafeConfig(ConfigView.TypesafeConfig annotation) {
+      return config.getConfig(annotation.path());
+    }
+
     Duration createDuration(ConfigView.Duration annotation) {
       return config.getDuration(annotation.path());
     }
 
     Map<String, Object> createMap(ConfigView.Map annotation) {
-      return config
-          .getConfig(annotation.path())
-          .entrySet()
-          .stream()
+      return config.getConfig(annotation.path()).entrySet().stream()
           .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().unwrapped()));
     }
 
@@ -239,6 +241,12 @@ class ConfigViewProxy implements MethodInterceptor {
         (key, returnType) -> {
           final ConfigView.Configuration annotation = (ConfigView.Configuration) key;
           return factory.createConfig(annotation, returnType);
+        });
+    handlers.put(
+        ConfigView.TypesafeConfig.class,
+        (key, returnType) -> {
+          final ConfigView.TypesafeConfig annotation = (ConfigView.TypesafeConfig) key;
+          return factory.createTypeSafeConfig(annotation);
         });
     handlers.put(
         ConfigView.Bytes.class,
