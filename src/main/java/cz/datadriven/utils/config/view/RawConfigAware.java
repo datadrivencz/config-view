@@ -23,9 +23,7 @@ import com.typesafe.config.Config;
  */
 public interface RawConfigAware {
 
-  static String rawConfigMethodName() {
-    return RawConfigAware.class.getMethods()[0].getName();
-  }
+  String GET_RAW_CONFIG_METHOD_NAME = "getRawConfig";
 
   /**
    * @return underlying {@link Config} of given {@link

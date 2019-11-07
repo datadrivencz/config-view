@@ -84,3 +84,7 @@ sourceSets {
 release {
   tagTemplate = 'v$version'
 }
+
+junitPlatform {
+  details 'verbose'
+}
