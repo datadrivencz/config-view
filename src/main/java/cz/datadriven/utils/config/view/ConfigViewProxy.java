@@ -98,8 +98,11 @@ class ConfigViewProxy implements MethodInterceptor {
     long createBytes(ConfigView.Bytes annotation) {
       return config.getBytes(annotation.path());
     }
-  }
 
+    Config getConfig() {
+      return config;
+    }
+  }
   /**
    * Handler for a specific annotation
    *
@@ -113,8 +116,10 @@ class ConfigViewProxy implements MethodInterceptor {
 
   private final ConcurrentHashMap<String, Object> trackedInstruments = new ConcurrentHashMap<>();
   private final Map<Class<?>, AnnotationHandler<?>> annotationHandlers;
+  private final Factory factory;
 
   ConfigViewProxy(Factory factory) {
+    this.factory = factory;
     this.annotationHandlers = createAnnotationHandlers(factory);
   }
 
@@ -124,6 +129,9 @@ class ConfigViewProxy implements MethodInterceptor {
     final Optional<Annotation> maybeAnnotation = getInstrumentAnnotation(method);
     if (maybeAnnotation.isPresent()) {
       return getOrCreateInstrument(method.getName(), method.getReturnType(), maybeAnnotation.get());
+    } else if (obj instanceof RawConfigAware
+        && RawConfigAware.rawConfigMethodName().equals(method.getName())) {
+      return factory.getConfig();
     } else {
       return methodProxy.invokeSuper(obj, args);
     }
