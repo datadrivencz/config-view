@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 public class NestedConfigTest {
 
   @ConfigView
-  interface RootConfig extends TypesafeConfigProvider {
+  interface RootConfig extends RawConfigAware {
     @ConfigView.Integer(path = "cabbage")
     int cabbage();
 
@@ -37,7 +37,7 @@ public class NestedConfigTest {
   }
 
   @ConfigView
-  interface FruitsConfig extends TypesafeConfigProvider { // Single nested
+  interface FruitsConfig extends RawConfigAware { // Single nested
     @ConfigView.Integer(path = "apple")
     int apples();
 
@@ -77,7 +77,7 @@ public class NestedConfigTest {
     Config config = ConfigFactory.load("nested"); // load nested.conf from resources
     RootConfig rootConfig = ConfigViewFactory.create(RootConfig.class, config);
 
-    assertEquals(APPLE_COUNT, rootConfig.asTypesafeConfig().getInt("fruit.apple"));
-    assertEquals(APPLE_COUNT, rootConfig.fruits().asTypesafeConfig().getInt("apple"));
+    assertEquals(APPLE_COUNT, rootConfig.getRawConfig().getInt("fruit.apple"));
+    assertEquals(APPLE_COUNT, rootConfig.fruits().getRawConfig().getInt("apple"));
   }
 }

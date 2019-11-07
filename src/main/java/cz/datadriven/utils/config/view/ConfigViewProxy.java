@@ -129,8 +129,8 @@ class ConfigViewProxy implements MethodInterceptor {
     final Optional<Annotation> maybeAnnotation = getInstrumentAnnotation(method);
     if (maybeAnnotation.isPresent()) {
       return getOrCreateInstrument(method.getName(), method.getReturnType(), maybeAnnotation.get());
-    } else if (obj instanceof TypesafeConfigProvider
-        && TypesafeConfigProvider.typesafeConfigMethodName().equals(method.getName())) {
+    } else if (obj instanceof RawConfigAware
+        && RawConfigAware.rawConfigMethodName().equals(method.getName())) {
       return factory.getConfig();
     } else {
       return methodProxy.invokeSuper(obj, args);

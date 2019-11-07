@@ -21,15 +21,15 @@ import com.typesafe.config.Config;
  * Enables {@link cz.datadriven.utils.config.view.annotation.ConfigView} annotated interface to
  * provide its underlying {@link Config} if extends this interface.
  */
-public interface TypesafeConfigProvider {
+public interface RawConfigAware {
 
-  static String typesafeConfigMethodName() {
-    return TypesafeConfigProvider.class.getMethods()[0].getName();
+  static String rawConfigMethodName() {
+    return RawConfigAware.class.getMethods()[0].getName();
   }
 
   /**
    * @return underlying {@link Config} of given {@link
    *     cz.datadriven.utils.config.view.annotation.ConfigView} interface
    */
-  Config asTypesafeConfig();
+  Config getRawConfig();
 }
