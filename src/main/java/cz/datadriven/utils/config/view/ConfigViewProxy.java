@@ -57,7 +57,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
     @SuppressFBWarnings(
         value = "SE_BAD_FIELD",
         justification =
-            "Config interface doesn't extends Serializable, but the non-public implementation SimpleConfig does")
+            "Config interface doesn't extend Serializable, but the non-public implementation SimpleConfig does")
     private final Config config;
 
     Factory(Config config) {
