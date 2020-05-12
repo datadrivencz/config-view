@@ -17,6 +17,8 @@ package cz.datadriven.utils.config.view;
 
 import com.typesafe.config.Config;
 import cz.datadriven.utils.config.view.annotation.ConfigView;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -30,7 +32,9 @@ import java.util.stream.Collectors;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
-class ConfigViewProxy implements MethodInterceptor {
+class ConfigViewProxy implements MethodInterceptor, Serializable {
+
+  private static final long serialVersionUID = -8983369061952970985L;
 
   private static final List<Class<? extends Annotation>> ANNOTATIONS =
       Arrays.asList(
@@ -46,8 +50,14 @@ class ConfigViewProxy implements MethodInterceptor {
           ConfigView.Bytes.class,
           ConfigView.Map.class);
 
-  static class Factory {
+  static class Factory implements Serializable {
 
+    private static final long serialVersionUID = 62698747501317112L;
+
+    @SuppressFBWarnings(
+        value = "SE_BAD_FIELD",
+        justification =
+            "Config interface doesn't extends Serializable, but the non-public implementation SimpleConfig does")
     private final Config config;
 
     Factory(Config config) {
@@ -109,7 +119,7 @@ class ConfigViewProxy implements MethodInterceptor {
    * @param <T>
    */
   @FunctionalInterface
-  private interface AnnotationHandler<T> {
+  private interface AnnotationHandler<T> extends Serializable {
 
     T handle(Annotation annotation, Class<T> returnType);
   }
