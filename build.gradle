@@ -1,10 +1,7 @@
 plugins {
-  id 'com.github.hierynomus.license' version '0.14.0'
-  id 'com.github.johnrengelman.shadow' version '2.0.1'
   id 'com.github.spotbugs' version '4.0.8'
-  id "com.diffplug.gradle.spotless" version "3.25.0"
-  id 'net.researchgate.release' version '2.6.0'
-  id 'com.bmuschko.nexus' version '2.3.1' apply false
+  id "com.diffplug.gradle.spotless" version "3.30.0"
+  id 'net.researchgate.release' version '2.8.1'
 }
 
 ext {
@@ -17,7 +14,6 @@ group = 'cz.datadriven.utils'
 
 apply plugin: 'idea'
 apply plugin: 'java'
-apply plugin: 'maven-publish'
 apply from: "${rootProject.projectDir}/gradle/publishing.gradle"
 
 repositories {
@@ -34,17 +30,9 @@ dependencies {
 
 spotless {
   java {
+    licenseHeaderFile 'HEADER'
     googleJavaFormat("1.7")
   }
-}
-
-license {
-  include '**/*.java'
-  mapping('java', 'SLASHSTAR_STYLE')
-  header = rootProject.file('HEADER')
-  strictCheck = true
-  ext.year = "${Calendar.getInstance().get(Calendar.YEAR)}"
-  ext.name = 'Datadriven.cz'
 }
 
 spotbugsMain {
@@ -64,11 +52,6 @@ gradle.projectsEvaluated {
   tasks.withType(JavaCompile) {
     options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
   }
-}
-
-sourceSets {
-  test.compileClasspath += configurations.compileOnly
-  test.runtimeClasspath += configurations.compileOnly
 }
 
 release {
