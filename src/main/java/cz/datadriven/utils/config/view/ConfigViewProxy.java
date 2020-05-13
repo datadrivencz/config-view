@@ -16,12 +16,7 @@
 package cz.datadriven.utils.config.view;
 
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigRenderOptions;
 import cz.datadriven.utils.config.view.annotation.ConfigView;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -58,70 +53,62 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
 
     private static final long serialVersionUID = 62698747501317112L;
 
-    private transient Config config;
+    private final SerializableConfig config;
 
     Factory(Config config) {
-      this.config = config;
+      this.config = new SerializableConfig(config);
     }
 
     String createString(ConfigView.String annotation) {
-      return config.getString(annotation.path());
+      return getConfig().getString(annotation.path());
     }
 
     List<String> createStringList(ConfigView.StringList annotation) {
-      return config.getStringList(annotation.path());
+      return getConfig().getStringList(annotation.path());
     }
 
     boolean createBoolean(ConfigView.Boolean annotation) {
-      return config.getBoolean(annotation.path());
+      return getConfig().getBoolean(annotation.path());
     }
 
     int createInteger(ConfigView.Integer annotation) {
-      return config.getInt(annotation.path());
+      return getConfig().getInt(annotation.path());
     }
 
     long createLong(ConfigView.Long annotation) {
-      return config.getLong(annotation.path());
+      return getConfig().getLong(annotation.path());
     }
 
     double createDouble(ConfigView.Double annotation) {
-      return config.getDouble(annotation.path());
+      return getConfig().getDouble(annotation.path());
     }
 
     <T> T createConfig(ConfigView.Configuration annotation, Class<T> claz) {
-      return ConfigViewFactory.create(claz, config.getConfig(annotation.path()));
+      return ConfigViewFactory.create(claz, getConfig().getConfig(annotation.path()));
     }
 
     Config createTypeSafeConfig(ConfigView.TypesafeConfig annotation) {
-      return config.getConfig(annotation.path());
+      return getConfig().getConfig(annotation.path());
     }
 
     Duration createDuration(ConfigView.Duration annotation) {
-      return config.getDuration(annotation.path());
+      return getConfig().getDuration(annotation.path());
     }
 
     Map<String, Object> createMap(ConfigView.Map annotation) {
-      return config.getConfig(annotation.path()).entrySet().stream()
+      return getConfig().getConfig(annotation.path()).entrySet().stream()
           .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().unwrapped()));
     }
 
     long createBytes(ConfigView.Bytes annotation) {
-      return config.getBytes(annotation.path());
+      return getConfig().getBytes(annotation.path());
     }
 
     Config getConfig() {
-      return config;
-    }
-
-    private void readObject(ObjectInputStream aInputStream)
-        throws ClassNotFoundException, IOException {
-      config = ConfigFactory.parseString(aInputStream.readUTF());
-    }
-
-    private void writeObject(ObjectOutputStream aOutputStream) throws IOException {
-      aOutputStream.writeUTF(config.root().render(ConfigRenderOptions.concise()));
+      return config.get();
     }
   }
+
   /**
    * Handler for a specific annotation
    *
