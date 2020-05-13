@@ -23,7 +23,6 @@ repositories {
 dependencies {
   implementation "cglib:cglib:${cglibVersion}"
   implementation "com.typesafe:config:${configVersion}"
-  compileOnly "com.github.spotbugs:spotbugs-annotations:${spotbugs.toolVersion.get()}"
   testImplementation("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
 }

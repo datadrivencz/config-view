@@ -16,8 +16,12 @@
 package cz.datadriven.utils.config.view;
 
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
 import cz.datadriven.utils.config.view.annotation.ConfigView;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -54,11 +58,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
 
     private static final long serialVersionUID = 62698747501317112L;
 
-    @SuppressFBWarnings(
-        value = "SE_BAD_FIELD",
-        justification =
-            "Config interface doesn't extend Serializable, but the non-public implementation SimpleConfig does")
-    private final Config config;
+    private transient Config config;
 
     Factory(Config config) {
       this.config = config;
@@ -111,6 +111,15 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
 
     Config getConfig() {
       return config;
+    }
+
+    private void readObject(ObjectInputStream aInputStream)
+        throws ClassNotFoundException, IOException {
+      config = ConfigFactory.parseString(aInputStream.readUTF());
+    }
+
+    private void writeObject(ObjectOutputStream aOutputStream) throws IOException {
+      aOutputStream.writeUTF(config.root().render(ConfigRenderOptions.concise()));
     }
   }
   /**
