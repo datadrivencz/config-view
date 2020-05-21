@@ -1,57 +1,62 @@
-apply plugin: 'com.bmuschko.nexus'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
-modifyPom {
-  project {
-    name 'Datadriven ConfigView'
-    description 'Convenient over typesafe config.'
-    url 'https://github.com/datadrivencz/config-view'
-    inceptionYear '2018'
-
-    scm {
-      url 'https://github.com/datadrivencz/config-view'
-      connection 'scm:https://github.com/datadrivencz/config-view/.git'
-      developerConnection 'scm:git://github.com/datadrivencz/config-view.git'
-    }
-
-    licenses {
-      license {
-        name 'The Apache Software License, Version 2.0'
-        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-        distribution 'repo'
-      }
-    }
-
-    developers {
-      developer {
-        id 'dmvk'
-        name 'David Moravek'
-        email 'david.moravek@gmail.com'
-      }
-      developer {
-        id 'je-ik'
-        name 'Jan Lukavsky'
-        email 'je.ik@seznam.cz'
-      }
-    }
-  }
+ext {
+  isReleaseVersion = !version.endsWith("SNAPSHOT")
 }
 
-extraArchive {
-  sources = true
-  javadoc = true
-  tests = false
-}
-
-nexus {
-  sign = true
-  repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
-  snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+java {
+  withJavadocJar()
+  withSourcesJar()
 }
 
 publishing {
+  repositories {
+    maven {
+      def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+      def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+      url = isReleaseVersion ? releasesRepoUrl : snapshotsRepoUrl
+    }
+  }
   publications {
     mavenJava(MavenPublication) {
+      pom {
+        name = 'Datadriven ConfigView'
+        description = 'Convenient over typesafe config.'
+        url = 'https://github.com/datadrivencz/config-view'
+        inceptionYear = '2018'
+        scm {
+          url = 'https://github.com/datadrivencz/config-view'
+          connection = 'scm:https://github.com/datadrivencz/config-view/.git'
+          developerConnection = 'scm:git://github.com/datadrivencz/config-view.git'
+        }
+        licenses {
+          license {
+            name = 'The Apache Software License, Version 2.0'
+            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            distribution = 'repo'
+          }
+        }
+        developers {
+          developer {
+            id = 'dmvk'
+            name = 'David Moravek'
+            email = 'david.moravek@gmail.com'
+          }
+          developer {
+            id = 'je-ik'
+            name = 'Jan Lukavsky'
+            email = 'je.ik@seznam.cz'
+          }
+        }
+      }
+
       from components.java
     }
   }
+}
+
+signing {
+  required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
+  sign publishing.publications.mavenJava
 }

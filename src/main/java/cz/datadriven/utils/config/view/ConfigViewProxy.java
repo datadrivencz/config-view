@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Datadriven.cz
+ * Copyright 2020 Datadriven.cz
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package cz.datadriven.utils.config.view;
 
 import com.typesafe.config.Config;
 import cz.datadriven.utils.config.view.annotation.ConfigView;
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -30,7 +31,9 @@ import java.util.stream.Collectors;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
-class ConfigViewProxy implements MethodInterceptor {
+class ConfigViewProxy implements MethodInterceptor, Serializable {
+
+  private static final long serialVersionUID = -8983369061952970985L;
 
   private static final List<Class<? extends Annotation>> ANNOTATIONS =
       Arrays.asList(
@@ -46,70 +49,73 @@ class ConfigViewProxy implements MethodInterceptor {
           ConfigView.Bytes.class,
           ConfigView.Map.class);
 
-  static class Factory {
+  static class Factory implements Serializable {
 
-    private final Config config;
+    private static final long serialVersionUID = 62698747501317112L;
+
+    private final SerializableConfig config;
 
     Factory(Config config) {
-      this.config = config;
+      this.config = new SerializableConfig(config);
     }
 
     String createString(ConfigView.String annotation) {
-      return config.getString(annotation.path());
+      return getConfig().getString(annotation.path());
     }
 
     List<String> createStringList(ConfigView.StringList annotation) {
-      return config.getStringList(annotation.path());
+      return getConfig().getStringList(annotation.path());
     }
 
     boolean createBoolean(ConfigView.Boolean annotation) {
-      return config.getBoolean(annotation.path());
+      return getConfig().getBoolean(annotation.path());
     }
 
     int createInteger(ConfigView.Integer annotation) {
-      return config.getInt(annotation.path());
+      return getConfig().getInt(annotation.path());
     }
 
     long createLong(ConfigView.Long annotation) {
-      return config.getLong(annotation.path());
+      return getConfig().getLong(annotation.path());
     }
 
     double createDouble(ConfigView.Double annotation) {
-      return config.getDouble(annotation.path());
+      return getConfig().getDouble(annotation.path());
     }
 
     <T> T createConfig(ConfigView.Configuration annotation, Class<T> claz) {
-      return ConfigViewFactory.create(claz, config.getConfig(annotation.path()));
+      return ConfigViewFactory.create(claz, getConfig().getConfig(annotation.path()));
     }
 
     Config createTypeSafeConfig(ConfigView.TypesafeConfig annotation) {
-      return config.getConfig(annotation.path());
+      return getConfig().getConfig(annotation.path());
     }
 
     Duration createDuration(ConfigView.Duration annotation) {
-      return config.getDuration(annotation.path());
+      return getConfig().getDuration(annotation.path());
     }
 
     Map<String, Object> createMap(ConfigView.Map annotation) {
-      return config.getConfig(annotation.path()).entrySet().stream()
+      return getConfig().getConfig(annotation.path()).entrySet().stream()
           .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().unwrapped()));
     }
 
     long createBytes(ConfigView.Bytes annotation) {
-      return config.getBytes(annotation.path());
+      return getConfig().getBytes(annotation.path());
     }
 
     Config getConfig() {
-      return config;
+      return config.get();
     }
   }
+
   /**
    * Handler for a specific annotation
    *
    * @param <T>
    */
   @FunctionalInterface
-  private interface AnnotationHandler<T> {
+  private interface AnnotationHandler<T> extends Serializable {
 
     T handle(Annotation annotation, Class<T> returnType);
   }
