@@ -110,9 +110,14 @@ public @interface ConfigView {
     java.lang.String path();
   }
 
-  /** Handle for obtaining an instance of ConfigView annotated class. */
+  /**
+   * Handle for obtaining an instance of {@link ConfigView} annotated class.
+   *
+   * @deprecated Use {@link View} instead.
+   */
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.METHOD)
+  @Deprecated
   @interface Configuration {
 
     /**
@@ -123,7 +128,33 @@ public @interface ConfigView {
     java.lang.String path();
   }
 
-  /** Handle for obtaining an instance of typesafe Config class. */
+  /** Handle for obtaining an instance of {@link ConfigView} annotated class. */
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.METHOD)
+  @interface View {
+
+    /**
+     * The name of the field.
+     *
+     * @return path to the config property
+     */
+    java.lang.String path();
+  }
+
+  /** Handle for obtaining an list with elements of {@link ConfigView} annotated class. */
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.METHOD)
+  @interface ViewList {
+
+    /**
+     * The name of the field.
+     *
+     * @return path to the config property
+     */
+    java.lang.String path();
+  }
+
+  /** Handle for obtaining an instance of typesafe {@link com.typesafe.config.Config} class. */
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.METHOD)
   @interface TypesafeConfig {
