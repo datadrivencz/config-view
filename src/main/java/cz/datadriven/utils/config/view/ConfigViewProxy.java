@@ -20,6 +20,8 @@ import cz.datadriven.utils.config.view.annotation.ConfigView;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,6 +47,8 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
           ConfigView.Double.class,
           ConfigView.Duration.class,
           ConfigView.Configuration.class,
+          ConfigView.View.class,
+          ConfigView.ViewList.class,
           ConfigView.TypesafeConfig.class,
           ConfigView.Bytes.class,
           ConfigView.Map.class);
@@ -83,8 +87,12 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
       return getConfig().getDouble(annotation.path());
     }
 
-    <T> T createConfig(ConfigView.Configuration annotation, Class<T> claz) {
-      return ConfigViewFactory.create(claz, getConfig().getConfig(annotation.path()));
+    <T> T createConfig(ConfigView.Configuration annotation, Class<T> clazz) {
+      return ConfigViewFactory.create(clazz, getConfig().getConfig(annotation.path()));
+    }
+
+    <T> T createConfig(ConfigView.View annotation, Class<T> clazz) {
+      return ConfigViewFactory.create(clazz, getConfig().getConfig(annotation.path()));
     }
 
     Config createTypeSafeConfig(ConfigView.TypesafeConfig annotation) {
@@ -104,6 +112,12 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
       return getConfig().getBytes(annotation.path());
     }
 
+    <T> List<?> createConfigViewList(ConfigView.ViewList annotation, Class<T> clazz) {
+      return getConfig().getConfigList(annotation.path()).stream()
+          .map(config -> ConfigViewFactory.create(clazz, config))
+          .collect(Collectors.toList());
+    }
+
     Config getConfig() {
       return config.get();
     }
@@ -117,7 +131,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
   @FunctionalInterface
   private interface AnnotationHandler<T> extends Serializable {
 
-    T handle(Annotation annotation, Class<T> returnType);
+    T handle(Annotation annotation, Class<T> rawType, Type genericType);
   }
 
   private final ConcurrentHashMap<String, Object> trackedInstruments = new ConcurrentHashMap<>();
@@ -134,7 +148,11 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
       throws Throwable {
     final Optional<Annotation> maybeAnnotation = getInstrumentAnnotation(method);
     if (maybeAnnotation.isPresent()) {
-      return getOrCreateInstrument(method.getName(), method.getReturnType(), maybeAnnotation.get());
+      return getOrCreateInstrument(
+          method.getName(),
+          method.getReturnType(),
+          method.getGenericReturnType(),
+          maybeAnnotation.get());
     } else if (obj instanceof RawConfigAware
         && RawConfigAware.GET_RAW_CONFIG_METHOD_NAME.equals(method.getName())) {
       return factory.getConfig();
@@ -144,19 +162,21 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> T getOrCreateInstrument(String key, Class<T> returnType, Annotation annotation) {
+  private <T> T getOrCreateInstrument(
+      String key, Class<T> returnTypeRaw, Type returnType, Annotation annotation) {
     return (T)
         trackedInstruments.computeIfAbsent(
             key,
             x -> {
-              final AnnotationHandler handler = annotationHandlers.get(annotation.annotationType());
+              final AnnotationHandler<T> handler =
+                  (AnnotationHandler<T>) annotationHandlers.get(annotation.annotationType());
               if (handler == null) {
                 throw new IllegalStateException(
                     "Handler for annotation [ "
                         + annotation.annotationType()
                         + " ] is not registered.");
               }
-              return handler.handle(annotation, returnType);
+              return handler.handle(annotation, returnTypeRaw, returnType);
             });
   }
 
@@ -175,7 +195,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
     }
   }
 
-  static boolean canProxy(Class clazz) {
+  static boolean canProxy(Class<?> clazz) {
     for (Annotation annotation : clazz.getDeclaredAnnotations()) {
       if (ConfigView.class.equals(annotation.annotationType())) {
         return true;
@@ -190,7 +210,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
         ConfigView.String.class,
         checkType(
             String.class,
-            (key, returnType) -> {
+            (key, returnTypeRaw, returnType) -> {
               final ConfigView.String annotation = (ConfigView.String) key;
               return factory.createString(annotation);
             }));
@@ -198,7 +218,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
         ConfigView.StringList.class,
         checkType(
             List.class,
-            (key, returnType) -> {
+            (key, returnTypeRaw, returnType) -> {
               final ConfigView.StringList annotation = (ConfigView.StringList) key;
               return factory.createStringList(annotation);
             }));
@@ -206,7 +226,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
         ConfigView.Boolean.class,
         checkType(
             Boolean.class,
-            (key, returnType) -> {
+            (key, returnTypeRaw, returnType) -> {
               final ConfigView.Boolean annotation = (ConfigView.Boolean) key;
               return factory.createBoolean(annotation);
             }));
@@ -214,7 +234,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
         ConfigView.Integer.class,
         checkType(
             Integer.class,
-            (key, returnType) -> {
+            (key, returnTypeRaw, returnType) -> {
               final ConfigView.Integer annotation = (ConfigView.Integer) key;
               return factory.createInteger(annotation);
             }));
@@ -222,7 +242,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
         ConfigView.Long.class,
         checkType(
             Long.class,
-            (key, returnType) -> {
+            (key, returnTypeRaw, returnType) -> {
               final ConfigView.Long annotation = (ConfigView.Long) key;
               return factory.createLong(annotation);
             }));
@@ -230,7 +250,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
         ConfigView.Double.class,
         checkType(
             Double.class,
-            (key, returnType) -> {
+            (key, returnTypeRaw, returnType) -> {
               final ConfigView.Double annotation = (ConfigView.Double) key;
               return factory.createDouble(annotation);
             }));
@@ -238,7 +258,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
         ConfigView.Duration.class,
         checkType(
             Duration.class,
-            (key, returnType) -> {
+            (key, returnTypeRaw, returnType) -> {
               final ConfigView.Duration annotation = (ConfigView.Duration) key;
               return factory.createDuration(annotation);
             }));
@@ -246,19 +266,42 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
         ConfigView.Map.class,
         checkType(
             Map.class,
-            (key, returnType) -> {
+            (key, returnTypeRaw, returnType) -> {
               final ConfigView.Map annotation = (ConfigView.Map) key;
               return factory.createMap(annotation);
             }));
     handlers.put(
         ConfigView.Configuration.class,
-        (key, returnType) -> {
+        (key, returnTypeRaw, returnType) -> {
           final ConfigView.Configuration annotation = (ConfigView.Configuration) key;
-          return factory.createConfig(annotation, returnType);
+          return factory.createConfig(annotation, returnTypeRaw);
         });
     handlers.put(
+        ConfigView.View.class,
+        (key, returnTypeRaw, returnType) -> {
+          final ConfigView.View annotation = (ConfigView.View) key;
+          return factory.createConfig(annotation, returnTypeRaw);
+        });
+    handlers.put(
+        ConfigView.ViewList.class,
+        checkType(
+            List.class,
+            (key, returnTypeRaw, returnType) -> {
+              final ConfigView.ViewList annotation = (ConfigView.ViewList) key;
+              final ParameterizedType parameterizedType = (ParameterizedType) returnType;
+              if (parameterizedType.getActualTypeArguments().length != 1) {
+                throw new IllegalStateException(
+                    String.format(
+                        "Expected exactly one type parameter for [%s] return type at [%s].",
+                        returnTypeRaw, annotation.path()));
+              }
+              final Class<?> elementClass =
+                  (Class<?>) parameterizedType.getActualTypeArguments()[0];
+              return factory.createConfigViewList(annotation, elementClass);
+            }));
+    handlers.put(
         ConfigView.TypesafeConfig.class,
-        (key, returnType) -> {
+        (key, returnTypeRaw, returnType) -> {
           final ConfigView.TypesafeConfig annotation = (ConfigView.TypesafeConfig) key;
           return factory.createTypeSafeConfig(annotation);
         });
@@ -266,7 +309,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
         ConfigView.Bytes.class,
         checkType(
             Long.class,
-            (key, returnType) -> {
+            (key, returnTypeRaw, returnType) -> {
               final ConfigView.Bytes annotation = (ConfigView.Bytes) key;
               return factory.createBytes(annotation);
             }));
@@ -275,8 +318,8 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
 
   private static <T> AnnotationHandler<T> checkType(
       Class<T> expectedType, AnnotationHandler<T> handler) {
-    return (annotation, returnType) -> {
-      if (!expectedType.equals(wrapPrimitiveClass(returnType))) {
+    return (annotation, returnTypeRaw, returnType) -> {
+      if (!expectedType.equals(wrapPrimitiveClass(returnTypeRaw))) {
         throw new IllegalArgumentException(
             "Annotation ["
                 + annotation.toString()
@@ -286,7 +329,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
                 + returnType
                 + "].");
       }
-      return handler.handle(annotation, returnType);
+      return handler.handle(annotation, returnTypeRaw, returnType);
     };
   }
 

@@ -20,22 +20,44 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import cz.datadriven.utils.config.view.annotation.ConfigView;
+import java.util.List;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class NestedConfigTest {
+
+  private static final String TEST_CONFIG =
+      "cabbage: 98\n"
+          + "fruit {\n"
+          + "  apple: 31\n"
+          + "  citrus: {\n"
+          + "    orange:45\n"
+          + "    pomelo:63\n"
+          + "  }\n"
+          + "}\n"
+          + "farmers: [\n"
+          + "  { name: \"David\", country: \"CZ\" }\n"
+          + "  { name: \"Helmut\", country: \"AT\" }\n"
+          + "  { name: \"Charles\", country: \"US\" }\n"
+          + "]\n"
+          + "totalWeight: 366.6\n";
 
   @ConfigView
   interface RootConfig extends RawConfigAware {
     @ConfigView.Integer(path = "cabbage")
     int cabbage();
 
-    @ConfigView.Configuration(path = "fruit")
+    @ConfigView.View(path = "fruit")
     FruitsConfig fruits();
+
+    @ConfigView.ViewList(path = "farmers")
+    List<FarmerConfig> farmers();
 
     @ConfigView.Double(path = "totalWeight")
     double totalWeight();
   }
 
+  /** First level nesting. */
   @ConfigView
   interface FruitsConfig extends RawConfigAware { // Single nested
     @ConfigView.Integer(path = "apple")
@@ -45,8 +67,10 @@ public class NestedConfigTest {
     CitrusConfig citrus();
   }
 
+  /** Second level nesting. */
   @ConfigView
-  interface CitrusConfig { // Double-nested
+  interface CitrusConfig {
+
     @ConfigView.Integer(path = "orange")
     int oranges();
 
@@ -54,30 +78,50 @@ public class NestedConfigTest {
     int pomelo();
   }
 
-  // Values must match resources/nested.conf
-  private static final int CABBAGE_COUNT = 98;
-  private static final int APPLE_COUNT = 31;
-  private static final int ORANGES_COUNT = 45;
-  private static final int POMELO_COUNT = 63;
-  private static final double TOTAL_WEIGHT = 366.6d;
+  /** First level nesting - collection. */
+  @ConfigView
+  interface FarmerConfig {
+
+    @ConfigView.String(path = "name")
+    String name();
+
+    @ConfigView.String(path = "country")
+    String country();
+  }
 
   @Test
   public void test() {
-    Config config = ConfigFactory.load("nested"); // load nested.conf from resources
-    RootConfig rootConfig = ConfigViewFactory.create(RootConfig.class, config);
-    assertEquals(CABBAGE_COUNT, rootConfig.cabbage());
-    assertEquals(APPLE_COUNT, rootConfig.fruits().apples());
-    assertEquals(ORANGES_COUNT, rootConfig.fruits().citrus().oranges());
-    assertEquals(POMELO_COUNT, rootConfig.fruits().citrus().pomelo());
-    assertEquals(TOTAL_WEIGHT, rootConfig.totalWeight());
+    final Config config = ConfigFactory.parseString(TEST_CONFIG);
+    final RootConfig rootConfig = ConfigViewFactory.create(RootConfig.class, config);
+    assertEquals(98, rootConfig.cabbage());
+    assertEquals(31, rootConfig.fruits().apples());
+    assertEquals(45, rootConfig.fruits().citrus().oranges());
+    assertEquals(63, rootConfig.fruits().citrus().pomelo());
+    assertEquals(366.6d, rootConfig.totalWeight());
+    final List<FarmerConfig> farmers = rootConfig.farmers();
+    Assertions.assertEquals(3, farmers.size());
+    Assertions.assertEquals("David", farmers.get(0).name());
+    Assertions.assertEquals("CZ", farmers.get(0).country());
+    Assertions.assertEquals("Helmut", farmers.get(1).name());
+    Assertions.assertEquals("AT", farmers.get(1).country());
+    Assertions.assertEquals("Charles", farmers.get(2).name());
+    Assertions.assertEquals("US", farmers.get(2).country());
+  }
+
+  @Test
+  public void testNestedCaching() {
+    final Config config = ConfigFactory.parseString(TEST_CONFIG);
+    final RootConfig rootConfig = ConfigViewFactory.create(RootConfig.class, config);
+    assertEquals(
+        System.identityHashCode(rootConfig.farmers().get(0)),
+        System.identityHashCode(rootConfig.farmers().get(0)));
   }
 
   @Test
   public void testRawConfig() {
-    Config config = ConfigFactory.load("nested"); // load nested.conf from resources
-    RootConfig rootConfig = ConfigViewFactory.create(RootConfig.class, config);
-
-    assertEquals(APPLE_COUNT, rootConfig.getRawConfig().getInt("fruit.apple"));
-    assertEquals(APPLE_COUNT, rootConfig.fruits().getRawConfig().getInt("apple"));
+    final Config config = ConfigFactory.parseString(TEST_CONFIG);
+    final RootConfig rootConfig = ConfigViewFactory.create(RootConfig.class, config);
+    assertEquals(31, rootConfig.getRawConfig().getInt("fruit.apple"));
+    assertEquals(31, rootConfig.fruits().getRawConfig().getInt("apple"));
   }
 }
