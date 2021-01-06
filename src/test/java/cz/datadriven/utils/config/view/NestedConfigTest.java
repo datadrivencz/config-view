@@ -63,7 +63,7 @@ public class NestedConfigTest {
     @ConfigView.Integer(path = "apple")
     int apples();
 
-    @ConfigView.Configuration(path = "citrus")
+    @ConfigView.View(path = "citrus")
     CitrusConfig citrus();
   }
 

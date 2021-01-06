@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("deprecation")
 class ConfigViewProxy implements InvocationHandler, Serializable {
 
   private static final long serialVersionUID = -8983369061952970985L;

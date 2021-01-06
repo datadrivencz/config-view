@@ -64,7 +64,9 @@ public class ConfigViewFactory {
     try {
       return new ByteBuddy(ClassFileVersion.JAVA_V8)
           .subclass(configViewClass)
-          .method(ElementMatchers.isAnnotatedWith(ANNOTATION_TYPE_DESCRIPTORS::contains))
+          .method(
+              ElementMatchers.isAnnotatedWith(ANNOTATION_TYPE_DESCRIPTORS::contains)
+                  .or(ElementMatchers.isDeclaredBy(RawConfigAware.class)))
           .intercept(
               InvocationHandlerAdapter.of(new ConfigViewProxy(new ConfigViewProxy.Factory(config))))
           .make()
