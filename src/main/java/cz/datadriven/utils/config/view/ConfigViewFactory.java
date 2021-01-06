@@ -16,6 +16,7 @@
 package cz.datadriven.utils.config.view;
 
 import com.typesafe.config.Config;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.bytebuddy.ByteBuddy;
@@ -74,7 +75,10 @@ public class ConfigViewFactory {
           .getLoaded()
           .getDeclaredConstructor()
           .newInstance();
-    } catch (Exception e) {
+    } catch (InstantiationException
+        | InvocationTargetException
+        | NoSuchMethodException
+        | IllegalAccessException e) {
       throw new RuntimeException(
           String.format("Unable to construct [%s] class.", configViewClass), e);
     }
