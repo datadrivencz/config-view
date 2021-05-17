@@ -16,10 +16,23 @@
 package cz.datadriven.utils.config.view;
 
 import com.typesafe.config.Config;
-import net.sf.cglib.proxy.Enhancer;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Set;
+import java.util.stream.Collectors;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.ClassFileVersion;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.implementation.InvocationHandlerAdapter;
+import net.bytebuddy.matcher.ElementMatchers;
 
 /** Factory responsible for creation of config views. */
 public class ConfigViewFactory {
+
+  private static final Set<TypeDescription> ANNOTATION_TYPE_DESCRIPTORS =
+      ConfigViewProxy.ANNOTATIONS.stream()
+          .map(TypeDescription.ForLoadedType::of)
+          .collect(Collectors.toSet());
 
   /**
    * Create config view from a given config.
@@ -42,22 +55,32 @@ public class ConfigViewFactory {
    * @param <T> type of the view class to be created
    * @return the view
    */
-  @SuppressWarnings("unchecked")
   public static <T> T create(Class<T> configViewClass, Config config) {
     if (!ConfigViewProxy.canProxy(configViewClass)) {
       throw new IllegalArgumentException(
-          "Can not instantiate ConfigView for "
-              + "class [ "
-              + configViewClass
-              + " ]. Did you forget @ConfigView annotation?");
+          String.format(
+              "Can not instantiate ConfigView for class [%s]. Did you forget @ConfigView annotation?",
+              configViewClass));
     }
-    final Enhancer enhancer = new Enhancer();
-    enhancer.setCallback(new ConfigViewProxy(new ConfigViewProxy.Factory(config)));
-    if (configViewClass.isInterface()) {
-      enhancer.setInterfaces(new Class[] {configViewClass});
-    } else {
-      enhancer.setSuperclass(configViewClass);
+    try {
+      return new ByteBuddy(ClassFileVersion.JAVA_V8)
+          .subclass(configViewClass)
+          .method(
+              ElementMatchers.isAnnotatedWith(ANNOTATION_TYPE_DESCRIPTORS::contains)
+                  .or(ElementMatchers.isDeclaredBy(RawConfigAware.class)))
+          .intercept(
+              InvocationHandlerAdapter.of(new ConfigViewProxy(new ConfigViewProxy.Factory(config))))
+          .make()
+          .load(ConfigViewFactory.class.getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
+          .getLoaded()
+          .getDeclaredConstructor()
+          .newInstance();
+    } catch (InstantiationException
+        | InvocationTargetException
+        | NoSuchMethodException
+        | IllegalAccessException e) {
+      throw new IllegalStateException(
+          String.format("Unable to construct [%s] class.", configViewClass), e);
     }
-    return (T) enhancer.create();
   }
 }

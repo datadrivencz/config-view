@@ -19,39 +19,41 @@ import com.typesafe.config.Config;
 import cz.datadriven.utils.config.view.annotation.ConfigView;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
 
-class ConfigViewProxy implements MethodInterceptor, Serializable {
+@SuppressWarnings("deprecation")
+class ConfigViewProxy implements InvocationHandler, Serializable {
 
   private static final long serialVersionUID = -8983369061952970985L;
 
-  private static final List<Class<? extends Annotation>> ANNOTATIONS =
-      Arrays.asList(
-          ConfigView.String.class,
-          ConfigView.StringList.class,
-          ConfigView.Boolean.class,
-          ConfigView.Integer.class,
-          ConfigView.Long.class,
-          ConfigView.Double.class,
-          ConfigView.Duration.class,
-          ConfigView.Configuration.class,
-          ConfigView.View.class,
-          ConfigView.ViewList.class,
-          ConfigView.TypesafeConfig.class,
-          ConfigView.Bytes.class,
-          ConfigView.Map.class);
+  static final List<Class<? extends Annotation>> ANNOTATIONS =
+      Collections.unmodifiableList(
+          Arrays.asList(
+              ConfigView.String.class,
+              ConfigView.StringList.class,
+              ConfigView.Boolean.class,
+              ConfigView.Integer.class,
+              ConfigView.Long.class,
+              ConfigView.Double.class,
+              ConfigView.Duration.class,
+              ConfigView.Configuration.class,
+              ConfigView.View.class,
+              ConfigView.ViewList.class,
+              ConfigView.TypesafeConfig.class,
+              ConfigView.Bytes.class,
+              ConfigView.Map.class));
 
   static class Factory implements Serializable {
 
@@ -144,8 +146,7 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
   }
 
   @Override
-  public Object intercept(Object obj, Method method, Object[] args, MethodProxy methodProxy)
-      throws Throwable {
+  public Object invoke(Object proxy, Method method, Object[] args) {
     final Optional<Annotation> maybeAnnotation = getInstrumentAnnotation(method);
     if (maybeAnnotation.isPresent()) {
       return getOrCreateInstrument(
@@ -153,11 +154,12 @@ class ConfigViewProxy implements MethodInterceptor, Serializable {
           method.getReturnType(),
           method.getGenericReturnType(),
           maybeAnnotation.get());
-    } else if (obj instanceof RawConfigAware
+    } else if (proxy instanceof RawConfigAware
         && RawConfigAware.GET_RAW_CONFIG_METHOD_NAME.equals(method.getName())) {
       return factory.getConfig();
     } else {
-      return methodProxy.invokeSuper(obj, args);
+      throw new UnsupportedOperationException("Not implemented");
+      //      return methodProxy.invokeSuper(obj, args);
     }
   }
 

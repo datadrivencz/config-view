@@ -13,9 +13,14 @@ java {
 publishing {
   repositories {
     maven {
-      def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-      def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+      name = 'sonatype'
+      def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+      def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
       url = isReleaseVersion ? releasesRepoUrl : snapshotsRepoUrl
+      credentials {
+        username project.hasProperty('nexusUsername') ? project.property('nexusUsername') : 'change_me'
+        password project.hasProperty('nexusPassword') ? project.property('nexusPassword') : 'change_me'
+      }
     }
   }
   publications {
@@ -57,6 +62,7 @@ publishing {
 }
 
 signing {
+  useGpgCmd()
   required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
   sign publishing.publications.mavenJava
 }
