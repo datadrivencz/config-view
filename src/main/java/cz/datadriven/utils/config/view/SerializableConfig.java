@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/** {@link Serializable} holder for typesafe {@link Config}. */
 public class SerializableConfig implements Serializable {
 
   private static class SerializedConfig implements Serializable {
@@ -50,6 +51,11 @@ public class SerializableConfig implements Serializable {
     this.config = config;
   }
 
+  /**
+   * Get the underlying config.
+   *
+   * @return Config.
+   */
   public Config get() {
     return config;
   }

@@ -79,7 +79,7 @@ public class ConfigViewFactory {
         | InvocationTargetException
         | NoSuchMethodException
         | IllegalAccessException e) {
-      throw new RuntimeException(
+      throw new IllegalStateException(
           String.format("Unable to construct [%s] class.", configViewClass), e);
     }
   }

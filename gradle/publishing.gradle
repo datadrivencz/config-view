@@ -14,12 +14,12 @@ publishing {
   repositories {
     maven {
       name = 'sonatype'
-      def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-      def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+      def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+      def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
       url = isReleaseVersion ? releasesRepoUrl : snapshotsRepoUrl
       credentials {
-        username nexusUsername
-        password nexusPassword
+        username project.hasProperty('nexusUsername') ? project.property('nexusUsername') : 'change_me'
+        password project.hasProperty('nexusPassword') ? project.property('nexusPassword') : 'change_me'
       }
     }
   }
