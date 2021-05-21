@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class ConfigViewTest {
@@ -83,6 +84,13 @@ public class ConfigViewTest {
 
     @ConfigView.String(path = "string")
     Integer string();
+  }
+
+  @ConfigView
+  interface MapConfig {
+
+    @ConfigView.Map(path = "data")
+    Map<String, Object> data();
   }
 
   interface NonAnnotatedTestConfigView {}
@@ -174,5 +182,20 @@ public class ConfigViewTest {
               ConfigViewFactory.create(IllegalReturnType.class, config);
           illegalReturnType.string();
         });
+  }
+
+  @Test
+  public void testQuotedKeyWithDotInAMap() {
+    final String config =
+        "data {\n"
+            + "  regular-apple: 10\n"
+            + "  \"quoted-apple\": 20\n"
+            + "  \"dotted.apple\": 30\n"
+            + "}";
+    final MapConfig mapConfig =
+        ConfigViewFactory.create(MapConfig.class, ConfigFactory.parseString(config));
+    Assertions.assertEquals(10, mapConfig.data().get("regular-apple"));
+    Assertions.assertEquals(20, mapConfig.data().get("quoted-apple"));
+    Assertions.assertEquals(30, mapConfig.data().get("dotted.apple"));
   }
 }

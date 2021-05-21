@@ -55,6 +55,19 @@ class ConfigViewProxy implements InvocationHandler, Serializable {
               ConfigView.Bytes.class,
               ConfigView.Map.class));
 
+  /**
+   * Unquote string (if it starts and end with a quote)
+   *
+   * @param key Maybe quoted key.
+   * @return Unquoted key.
+   */
+  private static String unquote(String key) {
+    if (key.length() > 2 && key.charAt(0) == '"' && key.charAt(key.length() - 1) == '"') {
+      return key.substring(1, key.length() - 1);
+    }
+    return key;
+  }
+
   static class Factory implements Serializable {
 
     private static final long serialVersionUID = 62698747501317112L;
@@ -107,7 +120,7 @@ class ConfigViewProxy implements InvocationHandler, Serializable {
 
     Map<String, Object> createMap(ConfigView.Map annotation) {
       return getConfig().getConfig(annotation.path()).entrySet().stream()
-          .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().unwrapped()));
+          .collect(Collectors.toMap(e -> unquote(e.getKey()), e -> e.getValue().unwrapped()));
     }
 
     long createBytes(ConfigView.Bytes annotation) {
