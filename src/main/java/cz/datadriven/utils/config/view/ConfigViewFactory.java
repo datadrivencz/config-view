@@ -16,12 +16,13 @@
 package cz.datadriven.utils.config.view;
 
 import com.typesafe.config.Config;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.InvocationHandlerAdapter;
 import net.bytebuddy.matcher.ElementMatchers;
@@ -71,16 +72,33 @@ public class ConfigViewFactory {
           .intercept(
               InvocationHandlerAdapter.of(new ConfigViewProxy(new ConfigViewProxy.Factory(config))))
           .make()
-          .load(ConfigViewFactory.class.getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
+          .load(
+              ConfigViewFactory.class.getClassLoader(),
+              determineBestClassLoadingStrategy(configViewClass))
           .getLoaded()
           .getDeclaredConstructor()
           .newInstance();
-    } catch (InstantiationException
-        | InvocationTargetException
-        | NoSuchMethodException
-        | IllegalAccessException e) {
+    } catch (Exception e) {
       throw new IllegalStateException(
           String.format("Unable to construct [%s] class.", configViewClass), e);
     }
+  }
+
+  private static ClassLoadingStrategy<ClassLoader> determineBestClassLoadingStrategy(
+      Class<?> targetClass) throws Exception {
+    if (ClassInjector.UsingLookup.isAvailable()) {
+      Class<?> methodHandlesClass = Class.forName("java.lang.invoke.MethodHandles");
+      Class<?> lookupClass = Class.forName("java.lang.invoke.MethodHandles$Lookup");
+      Method lookupMethod = methodHandlesClass.getMethod("lookup");
+      Method privateLookupInMethod =
+          methodHandlesClass.getMethod("privateLookupIn", Class.class, lookupClass);
+      Object lookup = lookupMethod.invoke(null);
+      Object privateLookup = privateLookupInMethod.invoke(null, targetClass, lookup);
+      return ClassLoadingStrategy.UsingLookup.of(privateLookup);
+    }
+    if (ClassInjector.UsingReflection.isAvailable()) {
+      return ClassLoadingStrategy.Default.INJECTION;
+    }
+    return ClassLoadingStrategy.Default.WRAPPER;
   }
 }
