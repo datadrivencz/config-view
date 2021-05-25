@@ -32,7 +32,7 @@ import java.io.Serializable;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class SerializationTest {
+class SerializationTest {
 
   @ConfigView
   interface TestConfigViewSerializableInterface extends Serializable {

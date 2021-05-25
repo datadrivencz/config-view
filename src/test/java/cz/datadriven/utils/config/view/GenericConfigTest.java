@@ -23,7 +23,7 @@ import com.typesafe.config.ConfigFactory;
 import cz.datadriven.utils.config.view.annotation.ConfigView;
 import org.junit.jupiter.api.Test;
 
-public class GenericConfigTest {
+class GenericConfigTest {
 
   @ConfigView
   interface ShoppingItem {
@@ -71,7 +71,7 @@ public class GenericConfigTest {
   }
 
   @Test
-  public void test() {
+  void test() {
     Config listConfig = ConfigFactory.load("generic"); // load nested.conf from resources
     Double actualPrice = 0.0;
     for (Config itemConfig : listConfig.getConfigList("shopping-list")) {

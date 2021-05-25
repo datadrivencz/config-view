@@ -24,7 +24,7 @@ import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class NestedConfigTest {
+class NestedConfigTest {
 
   private static final String TEST_CONFIG =
       "cabbage: 98\n"
@@ -90,7 +90,7 @@ public class NestedConfigTest {
   }
 
   @Test
-  public void test() {
+  void test() {
     final Config config = ConfigFactory.parseString(TEST_CONFIG);
     final RootConfig rootConfig = ConfigViewFactory.create(RootConfig.class, config);
     assertEquals(98, rootConfig.cabbage());
@@ -109,7 +109,7 @@ public class NestedConfigTest {
   }
 
   @Test
-  public void testNestedCaching() {
+  void testNestedCaching() {
     final Config config = ConfigFactory.parseString(TEST_CONFIG);
     final RootConfig rootConfig = ConfigViewFactory.create(RootConfig.class, config);
     assertEquals(
@@ -118,7 +118,7 @@ public class NestedConfigTest {
   }
 
   @Test
-  public void testRawConfig() {
+  void testRawConfig() {
     final Config config = ConfigFactory.parseString(TEST_CONFIG);
     final RootConfig rootConfig = ConfigViewFactory.create(RootConfig.class, config);
     assertEquals(31, rootConfig.getRawConfig().getInt("fruit.apple"));
