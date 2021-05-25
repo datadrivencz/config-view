@@ -16,6 +16,7 @@
 package cz.datadriven.utils.config.view;
 
 import com.typesafe.config.Config;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,6 +30,10 @@ import net.bytebuddy.matcher.ElementMatchers;
 
 /** Factory responsible for creation of config views. */
 public class ConfigViewFactory {
+
+  private ConfigViewFactory() {
+    // no-op
+  }
 
   private static final Set<TypeDescription> ANNOTATION_TYPE_DESCRIPTORS =
       ConfigViewProxy.ANNOTATIONS.stream()
@@ -78,14 +83,28 @@ public class ConfigViewFactory {
           .getLoaded()
           .getDeclaredConstructor()
           .newInstance();
-    } catch (Exception e) {
+    } catch (ClassNotFoundException
+        | InvocationTargetException
+        | NoSuchMethodException
+        | IllegalAccessException
+        | InstantiationException e) {
       throw new IllegalStateException(
           String.format("Unable to construct [%s] class.", configViewClass), e);
     }
   }
 
+  /**
+   * Compatibility layer between java class loading strategies.
+   *
+   * <p>This method handle different behaviour between java 8 and java 11+ class loaders.
+   *
+   * @param targetClass class to be loaded
+   * @return class loading strategy
+   */
   private static ClassLoadingStrategy<ClassLoader> determineBestClassLoadingStrategy(
-      Class<?> targetClass) throws Exception {
+      Class<?> targetClass)
+      throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+          IllegalAccessException {
     if (ClassInjector.UsingLookup.isAvailable()) {
       Class<?> methodHandlesClass = Class.forName("java.lang.invoke.MethodHandles");
       Class<?> lookupClass = Class.forName("java.lang.invoke.MethodHandles$Lookup");
