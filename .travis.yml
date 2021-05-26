@@ -3,8 +3,20 @@ language: java
 jdk:
   - openjdk8
 
+addons:
+  sonarcloud:
+    organization: "datadriven"
+    token:
+      secure: "UTKU5Tefo1jWcJyhw6+t5qKXlb3ZFYozdVQvFzTG+cxInnq4RChdEXSb7DCTUT/jENhDpiTSE8A+D4HCCOZOi7nxp4OyKBOun9EIItqHjxb4g1YwXEPzXj2h7FMW93KmU+Uch7JfmkOZb5kftMTxtmjEBFW8gy1aLwgUb/B5dU5YNk7tEGiWpZx75JybnJv6locrm3GG2hVvOHgqy2+y+bmOI1v6ELlYrHMubi5XRQZd75TRZ6DL4YeV+y+XxjmNFuKFOSV7SWZBeZvguymBGEOIO8bbT5NCY3ZOklRkliv1tCWS72nR+/7n5iIw/su8GHOILl5ptowWTW0UqnMUG62eFc0bEOh6ch/Qqlx1t2ePf3xcjAhNZg4zE3mLOFvumlyucXAX2pbIWeDwDTD5G+3ElGMETr/FiRb011qqaPqe86k4FaRgVygiOWQ8S2QlpuECu4DIVsMPFe6yfuKc40lwtHj8TtTC9iiowDHwN7DssCoy9c8t/7DX0BBAHFhZzEyyeMATVgvN6RiYQzC6QVHRmoySoOoveBKW0tQDJFuBGH/feTNLS/zpZ0TPDzmhr6ofB4GzWX+lcKFGE9uinYX4lPn69tzhxheNVBBwvjzgnrT33EMYg1Uo32muQfs8Us7wzboaf3Mkf6JIV/kkpmfxU6gqTLQPpZe7RfTDCyQ="
+before_script:
+  - wget https://github.com/sormuras/bach/raw/master/install-jdk.sh
 script:
   - ./gradlew clean build
+# This is just an hack because sonar doesn't work with java 8 anymore
+  - export JAVA_HOME=$HOME/openjdk11
+  - chmod u+x $TRAVIS_BUILD_DIR/install-jdk.sh
+  - $TRAVIS_BUILD_DIR/install-jdk.sh --feature 11 --target $JAVA_HOME
+  - ./gradlew sonarqube
 
 dist: bionic 
 
