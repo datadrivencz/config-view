@@ -31,7 +31,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class ConfigViewTest {
+class ConfigViewTest {
 
   @ConfigView
   interface TestConfigView {
@@ -96,7 +96,7 @@ public class ConfigViewTest {
   interface NonAnnotatedTestConfigView {}
 
   @Test
-  public void test() {
+  void test() {
     final Config config =
         ConfigFactory.empty()
             .withValue("first", ConfigValueFactory.fromAnyRef("first_value"))
@@ -107,7 +107,7 @@ public class ConfigViewTest {
   }
 
   @Test
-  public void testClass() {
+  void testClass() {
     final Config config =
         ConfigFactory.empty()
             .withValue("first", ConfigValueFactory.fromAnyRef("first_value"))
@@ -121,7 +121,7 @@ public class ConfigViewTest {
   }
 
   @Test
-  public void testAllAnnotationsWithPrefix() {
+  void testAllAnnotationsWithPrefix() {
     final Config config =
         ConfigFactory.empty()
             .withValue("x.y.string", ConfigValueFactory.fromAnyRef("string"))
@@ -152,7 +152,7 @@ public class ConfigViewTest {
   }
 
   @Test
-  public void testMissingValue() {
+  void testMissingValue() {
     assertThrows(
         ConfigException.Missing.class,
         () -> {
@@ -163,29 +163,25 @@ public class ConfigViewTest {
   }
 
   @Test
-  public void testWrapNonAnnotatedClass() {
+  void testWrapNonAnnotatedClass() {
+    final Config config = ConfigFactory.empty();
     assertThrows(
         IllegalArgumentException.class,
         () -> {
-          final Config config = ConfigFactory.empty();
           ConfigViewFactory.create(NonAnnotatedTestConfigView.class, config);
         });
   }
 
   @Test
-  public void testInvalidReturnType() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          final Config config = ConfigFactory.empty();
-          final IllegalReturnType illegalReturnType =
-              ConfigViewFactory.create(IllegalReturnType.class, config);
-          illegalReturnType.string();
-        });
+  void testInvalidReturnType() {
+    final Config config = ConfigFactory.empty();
+    final IllegalReturnType illegalReturnType =
+        ConfigViewFactory.create(IllegalReturnType.class, config);
+    assertThrows(IllegalArgumentException.class, illegalReturnType::string);
   }
 
   @Test
-  public void testQuotedKeyWithDotInAMap() {
+  void testQuotedKeyWithDotInAMap() {
     final String config =
         "data {\n"
             + "  regular-apple: 10\n"

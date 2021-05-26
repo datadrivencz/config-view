@@ -127,9 +127,9 @@ class ConfigViewProxy implements InvocationHandler, Serializable {
       return getConfig().getBytes(annotation.path());
     }
 
-    <T> List<?> createConfigViewList(ConfigView.ViewList annotation, Class<T> clazz) {
+    <T> List<T> createConfigViewList(ConfigView.ViewList annotation, Class<T> clazz) {
       return getConfig().getConfigList(annotation.path()).stream()
-          .map(config -> ConfigViewFactory.create(clazz, config))
+          .map(c -> ConfigViewFactory.create(clazz, c))
           .collect(Collectors.toList());
     }
 
