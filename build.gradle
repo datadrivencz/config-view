@@ -24,7 +24,7 @@ def junitJupiterVersion = '5.7.0'
 
 dependencies {
   api "com.typesafe:config:1.4.1"
-  implementation 'net.bytebuddy:byte-buddy:1.10.18'
+  implementation 'net.bytebuddy:byte-buddy:1.11.0'
   testImplementation("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
 }
