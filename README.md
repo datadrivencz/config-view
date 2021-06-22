@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/datadrivencz/config-view.svg?branch=master)](https://travis-ci.org/github/datadrivencz/config-view)
+[![Build Status](https://travis-ci.com/datadrivencz/config-view.svg?branch=master)](https://travis-ci.com/github/datadrivencz/config-view)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=datadrivencz_config-view&metric=alert_status)](https://sonarcloud.io/dashboard?id=datadrivencz_config-view)
 [![Maven Version](https://maven-badges.herokuapp.com/maven-central/cz.datadriven.utils/config-view/badge.svg)](https://search.maven.org/search?q=g:cz.datadriven.utils&a=config-view")
 
