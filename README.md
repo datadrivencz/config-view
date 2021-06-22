@@ -70,6 +70,6 @@ Feel free to open an issue in the [issue tracker](https://github.com/datadrivenc
 Config View is licensed under the terms of the Apache License 2.0.
 
 ## Project information
-- Config View is built on top of [cglib](https://github.com/cglib/cglib)
+- Config View is built on top of [Byte Buddy](https://bytebuddy.net/)
 - Java code is formatted using [google-format-java](https://github.com/google/google-java-format)
 - Code is built using [gradle](https://gradle.org/)
