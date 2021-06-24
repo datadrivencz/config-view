@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/datadrivencz/config-view.svg?branch=master)](https://travis-ci.org/github/datadrivencz/config-view)
+[![Build Status](https://travis-ci.com/datadrivencz/config-view.svg?branch=master)](https://travis-ci.com/github/datadrivencz/config-view)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=datadrivencz_config-view&metric=alert_status)](https://sonarcloud.io/dashboard?id=datadrivencz_config-view)
 [![Maven Version](https://maven-badges.herokuapp.com/maven-central/cz.datadriven.utils/config-view/badge.svg)](https://search.maven.org/search?q=g:cz.datadriven.utils&a=config-view")
 
@@ -70,6 +70,6 @@ Feel free to open an issue in the [issue tracker](https://github.com/datadrivenc
 Config View is licensed under the terms of the Apache License 2.0.
 
 ## Project information
-- Config View is built on top of [cglib](https://github.com/cglib/cglib)
+- Config View is built on top of [Byte Buddy](https://bytebuddy.net/)
 - Java code is formatted using [google-format-java](https://github.com/google/google-java-format)
 - Code is built using [gradle](https://gradle.org/)
