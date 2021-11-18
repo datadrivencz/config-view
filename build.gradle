@@ -3,10 +3,10 @@ plugins {
   id 'java'
   id 'jacoco'
   id 'java-library'
-  id 'com.github.spotbugs' version '4.0.8'
-  id "com.diffplug.spotless" version "5.12.5"
+  id 'com.github.spotbugs' version '4.7.10'
+  id "com.diffplug.spotless" version "6.0.0"
   id 'net.researchgate.release' version '2.8.1'
-  id "org.sonarqube" version "3.2.0"
+  id "org.sonarqube" version "3.3"
 }
 
 group = 'cz.datadriven.utils'
@@ -22,11 +22,11 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-def junitJupiterVersion = '5.7.0'
+def junitJupiterVersion = '5.8.1'
 
 dependencies {
   api "com.typesafe:config:1.4.1"
-  implementation 'net.bytebuddy:byte-buddy:1.11.0'
+  implementation 'net.bytebuddy:byte-buddy:1.12.1'
   testImplementation("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
 }
@@ -43,10 +43,10 @@ spotbugsMain {
   reportLevel = 'low'
   reports {
     xml {
-      enabled = false
+      required = false
     }
     html {
-      enabled = true
+      required = true
     }
   }
 }
@@ -67,7 +67,9 @@ test {
 
 jacocoTestReport {
   reports {
-    xml.enabled true
+    xml {
+      required = true
+    }
   }
 }
 
