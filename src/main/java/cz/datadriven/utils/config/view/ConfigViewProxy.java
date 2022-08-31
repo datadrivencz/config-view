@@ -172,7 +172,6 @@ class ConfigViewProxy implements InvocationHandler, Serializable {
       return factory.getConfig();
     } else {
       throw new UnsupportedOperationException("Not implemented");
-      //      return methodProxy.invokeSuper(obj, args);
     }
   }
 
@@ -200,12 +199,12 @@ class ConfigViewProxy implements InvocationHandler, Serializable {
         Arrays.stream(method.getDeclaredAnnotations())
             .filter(a -> ANNOTATIONS.contains(a.annotationType()))
             .collect(Collectors.toList());
-    if (annotations.size() == 0) {
+    if (annotations.isEmpty()) {
       return Optional.empty();
     } else if (annotations.size() == 1) {
       return Optional.of(annotations.get(0));
     } else {
-      throw new RuntimeException(
+      throw new IllegalArgumentException(
           "Method [ " + method + " ] has more than one instrument annotation.");
     }
   }

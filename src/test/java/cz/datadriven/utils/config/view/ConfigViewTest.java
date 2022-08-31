@@ -167,9 +167,7 @@ class ConfigViewTest {
     final Config config = ConfigFactory.empty();
     assertThrows(
         IllegalArgumentException.class,
-        () -> {
-          ConfigViewFactory.create(NonAnnotatedTestConfigView.class, config);
-        });
+        () -> ConfigViewFactory.create(NonAnnotatedTestConfigView.class, config));
   }
 
   @Test
@@ -193,5 +191,17 @@ class ConfigViewTest {
     Assertions.assertEquals(10, mapConfig.data().get("regular-apple"));
     Assertions.assertEquals(20, mapConfig.data().get("quoted-apple"));
     Assertions.assertEquals(30, mapConfig.data().get("dotted.apple"));
+  }
+
+  @Test
+  void sameClassTest() {
+    final Config config =
+        ConfigFactory.empty()
+            .withValue("first", ConfigValueFactory.fromAnyRef("first_value"))
+            .withValue("second", ConfigValueFactory.fromAnyRef("second_value"));
+    final TestConfigView wrap = ConfigViewFactory.create(TestConfigView.class, config);
+    final TestConfigView anotherWrap = ConfigViewFactory.create(TestConfigView.class, config);
+    assertEquals(wrap.getClass(), anotherWrap.getClass());
+    assertEquals(wrap, anotherWrap);
   }
 }
